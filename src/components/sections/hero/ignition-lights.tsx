@@ -47,24 +47,28 @@ export function IgnitionLights() {
   return (
     <>
       {/* Halo radial circular — camada SEPARADA do painel, posicionada
-          como filha direta da `<section>` do hero. Foi tirada de dentro
-          do wrapper do painel porque `mix-blend-mode: screen` + ancestor
-          dimensions pequenas + `<motion.span>` (inline) estavam fazendo
-          o blend renderizar como caixa retangular ao invés de círculo.
-          Agora é `<motion.div>` (block), com tamanho fixo e posição
-          absoluta na seção — o painel fica em z-30 acima dele.
+          como filha direta da `<section>` do hero. É `<motion.div>` (block),
+          com tamanho fixo e posição absoluta na seção; o painel fica em
+          z-30 acima dele.
+
+          IMPORTANTE: o tamanho aqui é deliberadamente conservador porque
+          a `<section>` do hero tem `overflow-hidden` pra clipar parallax,
+          e isso clipa o halo nas bordas da viewport. O centro do halo é
+          posicionado um pouco ABAIXO do top do painel (~4-6% da viewport)
+          pra dar margem pro raio + blur sem que o topo do círculo
+          encoste/cruze a borda superior da section (o que produzia uma
+          linha horizontal bem visível antes).
           
           O background `radial-gradient(circle, ...)` + `rounded-full` +
-          `blur-3xl` garantem formato orgânico arredondado.
-
-          Cresce 0→0.7 conforme as luzes acendem, atinge pico em
-          LIGHTS_OUT_AT, dissolve com o flash. */}
+          `blur-2xl` garantem formato orgânico arredondado. Aumentei a
+          intensidade do gradient (alpha 0.95/0.55) pra compensar o
+          tamanho menor — o glow continua presente, mas não estoura. */}
       <motion.div
         aria-hidden
-        initial={{ opacity: 0, scale: 0.65 }}
+        initial={{ opacity: 0, scale: 0.6 }}
         animate={{
-          opacity: [0, 0, 0.6, 0.78, 0],
-          scale: [0.65, 0.7, 1.0, 1.18, 0.85],
+          opacity: [0, 0, 0.65, 0.85, 0],
+          scale: [0.6, 0.7, 1.0, 1.18, 0.85],
         }}
         transition={{
           duration: TOTAL,
@@ -77,7 +81,7 @@ export function IgnitionLights() {
           ],
           ease: "easeOut",
         }}
-        className="pointer-events-none absolute left-1/2 top-[28%] z-20 size-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,oklch(0.58_0.23_27_/_0.85)_0%,oklch(0.58_0.23_27_/_0.45)_30%,transparent_70%)] blur-3xl sm:top-[24%] sm:size-[520px] lg:size-[640px]"
+        className="pointer-events-none absolute left-1/2 top-[30%] z-20 size-[280px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,oklch(0.58_0.23_27_/_0.95)_0%,oklch(0.58_0.23_27_/_0.55)_30%,transparent_72%)] blur-2xl sm:top-[28%] sm:size-[360px] lg:top-[26%] lg:size-[440px]"
         style={{ mixBlendMode: "screen" }}
       />
 
