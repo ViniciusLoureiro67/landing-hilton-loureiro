@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Hilton76Logo } from "@/components/Hilton76Logo";
+import { WHATSAPP_HREF } from "@/lib/links";
 
 const NAV_LINKS = [
   { href: "#sobre", label: "Sobre" },
@@ -22,9 +23,6 @@ const NAV_LINKS = [
   { href: "#patrocinio", label: "Para sua marca" },
   { href: "#contato", label: "Contato" },
 ];
-
-const WHATSAPP_HREF =
-  "https://wa.me/5582996696666?text=Ol%C3%A1%20Hilton%2C%20vim%20pelo%20site%20oficial%20e%20gostaria%20de%20conversar.";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
