@@ -7,9 +7,20 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-display: var(--font-display);
+  --font-heading: var(--font-heading);
+
+  --color-racing-blue: var(--racing-blue);
+  --color-racing-blue-deep: var(--racing-blue-deep);
+  --color-racing-red: var(--racing-red);
+  --color-racing-white: var(--racing-white);
+  --color-racing-yellow: var(--racing-yellow);
+  --color-racing-asphalt: var(--racing-asphalt);
+  --color-racing-mute: var(--racing-mute);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,82 +60,197 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --racing-blue: oklch(0.22 0.08 264);
+  --racing-blue-deep: oklch(0.13 0.05 260);
+  --racing-red: oklch(0.58 0.23 27);
+  --racing-white: oklch(0.97 0 0);
+  --racing-yellow: oklch(0.86 0.18 95);
+  --racing-asphalt: oklch(0.18 0.01 260);
+  --racing-mute: oklch(0.65 0.02 250);
+
+  --background: var(--racing-blue-deep);
+  --foreground: var(--racing-white);
+
+  --card: oklch(0.18 0.04 262);
+  --card-foreground: var(--racing-white);
+  --popover: oklch(0.18 0.04 262);
+  --popover-foreground: var(--racing-white);
+  --primary: var(--racing-red);
+  --primary-foreground: var(--racing-white);
+  --secondary: oklch(0.27 0.06 263);
+  --secondary-foreground: var(--racing-white);
+  --muted: oklch(0.22 0.04 262);
+  --muted-foreground: var(--racing-mute);
+  --accent: var(--racing-red);
+  --accent-foreground: var(--racing-white);
+  --destructive: oklch(0.58 0.23 27);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: var(--racing-red);
+
+  --chart-1: var(--racing-red);
+  --chart-2: var(--racing-blue);
+  --chart-3: var(--racing-yellow);
+  --chart-4: oklch(0.45 0.05 260);
+  --chart-5: oklch(0.65 0.02 250);
+
+  --radius: 0.5rem;
+
+  --sidebar: var(--racing-blue-deep);
+  --sidebar-foreground: var(--racing-white);
+  --sidebar-primary: var(--racing-red);
+  --sidebar-primary-foreground: var(--racing-white);
+  --sidebar-accent: oklch(0.22 0.04 262);
+  --sidebar-accent-foreground: var(--racing-white);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: var(--racing-red);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --racing-blue: oklch(0.22 0.08 264);
+  --racing-blue-deep: oklch(0.13 0.05 260);
+  --racing-red: oklch(0.58 0.23 27);
+  --racing-white: oklch(0.97 0 0);
+  --racing-yellow: oklch(0.86 0.18 95);
+  --racing-asphalt: oklch(0.18 0.01 260);
+  --racing-mute: oklch(0.65 0.02 250);
+
+  --background: var(--racing-blue-deep);
+  --foreground: var(--racing-white);
+  --card: oklch(0.18 0.04 262);
+  --card-foreground: var(--racing-white);
+  --popover: oklch(0.18 0.04 262);
+  --popover-foreground: var(--racing-white);
+  --primary: var(--racing-red);
+  --primary-foreground: var(--racing-white);
+  --secondary: oklch(0.27 0.06 263);
+  --secondary-foreground: var(--racing-white);
+  --muted: oklch(0.22 0.04 262);
+  --muted-foreground: var(--racing-mute);
+  --accent: var(--racing-red);
+  --accent-foreground: var(--racing-white);
+  --destructive: oklch(0.58 0.23 27);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: var(--racing-red);
+
+  --sidebar: var(--racing-blue-deep);
+  --sidebar-foreground: var(--racing-white);
+  --sidebar-primary: var(--racing-red);
+  --sidebar-primary-foreground: var(--racing-white);
+  --sidebar-accent: oklch(0.22 0.04 262);
+  --sidebar-accent-foreground: var(--racing-white);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: var(--racing-red);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+
   html {
     @apply font-sans;
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+  }
+
+  /* Headlines */
+  .font-display {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  /* Section headings */
+  .font-heading {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Mono / data */
+  .font-mono {
+    font-family: var(--font-mono), ui-monospace, monospace;
+  }
+}
+
+@layer utilities {
+  /* Diagonal slash divider — recurring brand element */
+  .racing-slash {
+    --slash-angle: -8deg;
+    position: relative;
+  }
+  .racing-slash::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--racing-red);
+    transform: skewY(var(--slash-angle));
+    transform-origin: top left;
+    z-index: -1;
+  }
+
+  /* Gigantic number 76 used as background graphic */
+  .racing-number-bg {
+    font-family: var(--font-display), sans-serif;
+    font-size: clamp(20rem, 40vw, 50rem);
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+    color: oklch(1 0 0 / 0.04);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* Speed-line accent — used in card hover overlays */
+  .racing-speed-lines {
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 12px,
+      oklch(1 0 0 / 0.06) 12px,
+      oklch(1 0 0 / 0.06) 14px
+    );
+  }
+
+  /* Subtle film grain over backgrounds for editorial feel */
+  .racing-grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    mix-blend-mode: overlay;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Reveal helper used by GSAP/Framer */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+
+  /* Diagonal clip (image/section corners) */
+  .clip-diagonal-bl {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 calc(100% - 56px));
+  }
+  .clip-diagonal-br {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 56px), 0 100%);
+  }
+  .clip-diagonal-tl {
+    clip-path: polygon(0 56px, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
