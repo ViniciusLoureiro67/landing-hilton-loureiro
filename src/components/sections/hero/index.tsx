@@ -40,7 +40,8 @@ import { ScrollIndicator } from "./scroll-indicator";
  *   4.45s — scroll indicator aparece
  *   ~5.00s — hero está calmo
  *
- * TODO(asset): trocar fotos quando a hero limpa do Moto1000GP chegar.
+ * TODO(asset): trocar fotos quando a hero limpa de 2026 chegar (sem
+ * texto sobreposto).
  */
 export function Hero() {
   return (
@@ -63,7 +64,7 @@ export function Hero() {
               então o SR lê: "Hilton Loureiro" → tagline → CTAs → contexto
               da foto, em vez de começar pela foto. */}
           <span id="hero-photo-description" className="sr-only">
-            Hilton Loureiro pilotando moto Yamaha número 76 em curva,
+            Hilton Loureiro pilotando moto Kawasaki ZX6R número 76 em curva,
             capacete com Sonic visível.
           </span>
         </HeroMainColumn>

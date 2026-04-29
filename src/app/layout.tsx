@@ -36,21 +36,22 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hiltonloureiro.com.
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Hilton Loureiro 76 — Piloto Moto1000GP",
+    default: "Hilton Loureiro 76 — Piloto profissional 600cc Master",
     template: "%s | Hilton Loureiro 76",
   },
   description:
-    "Site oficial do piloto Hilton Loureiro #76. Bicampeão Brasileiro Endurance 600cc, agora no Campeonato Brasileiro Moto1000GP. Calendário, palmarés, galeria e patrocínio.",
+    "Site oficial do piloto Hilton Loureiro #76. Bicampeão Brasileiro Endurance 600cc, na categoria 600cc Master pela equipe NRT. Calendário, palmarés, galeria e patrocínio.",
   keywords: [
     "Hilton Loureiro",
     "Hilton 76",
-    "Moto1000GP",
     "Campeonato Brasileiro de Motovelocidade",
+    "600cc Master",
     "Endurance 600cc",
     "piloto profissional",
     "motovelocidade Brasil",
-    "PRT Racing",
-    "Garagem 53",
+    "Kawasaki ZX6R",
+    "NRT",
+    "Garagem 57",
   ],
   authors: [{ name: "Hilton Loureiro" }],
   openGraph: {
@@ -58,15 +59,15 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     url: siteUrl,
     siteName: "Hilton Loureiro 76",
-    title: "Hilton Loureiro 76 — Piloto Moto1000GP",
+    title: "Hilton Loureiro 76 — Piloto profissional 600cc Master",
     description:
-      "Bicampeão Brasileiro Endurance 600cc, agora na principal categoria da motovelocidade nacional.",
+      "Bicampeão Brasileiro Endurance 600cc, na categoria 600cc Master pela equipe NRT.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Hilton Loureiro 76 — Piloto Moto1000GP",
+    title: "Hilton Loureiro 76 — Piloto profissional 600cc Master",
     description:
-      "Bicampeão Brasileiro Endurance 600cc, agora na principal categoria da motovelocidade nacional.",
+      "Bicampeão Brasileiro Endurance 600cc, na categoria 600cc Master pela equipe NRT.",
   },
   robots: {
     index: true,

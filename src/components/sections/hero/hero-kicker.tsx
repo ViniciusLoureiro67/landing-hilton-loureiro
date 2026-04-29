@@ -66,7 +66,7 @@ export function HeroKicker() {
           />
           <span aria-hidden className="relative inline-block size-2 rounded-full bg-racing-red" />
         </span>
-        <span>Moto1000GP · em pista</span>
+        <span>600cc Master · em pista</span>
       </motion.div>
     </motion.div>
   );
