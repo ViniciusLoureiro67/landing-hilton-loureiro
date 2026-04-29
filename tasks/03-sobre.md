@@ -349,3 +349,46 @@ Na execução, atualizar seção 1 com:
 ---
 
 **Gate Plan = Livre** — pronto para execução via agent `exec`.
+
+---
+
+## Fase 6 — Implementação
+
+| Arquivo | Ação | Status |
+|---------|------|--------|
+| `tasks/03-sobre.md` | criado | ✅ |
+| `public/photos/06-curb-brasil-flag.jpg` | adicionado | ✅ |
+| `src/components/sections/sobre/sobre-photo.tsx` | criado | ✅ |
+| `src/components/sections/sobre/sobre-stats.tsx` | criado | ✅ |
+| `src/components/sections/sobre/sobre-bio.tsx` | criado | ✅ |
+| `src/components/sections/sobre/sobre-timeline.tsx` | criado | ✅ |
+| `src/components/sections/sobre/index.tsx` | criado | ✅ |
+| `src/app/page.tsx` | modificado (placeholder → `<Sobre />`) | ✅ |
+
+---
+
+## Fase 7 — Verificação
+
+```
+$ npm run lint
+✓ ESLint — sem erros
+
+$ npm run build
+▲ Next.js 16.2.4 (Turbopack)
+✓ Compiled successfully in 1694ms
+✓ TypeScript passed
+✓ Generating static pages (6/6)
+○ (Static) prerendered as static content
+```
+
+### Desvios do plano
+
+- **SobreStats**: simplificado para 1 `useEffect` com `motionVal.jump()` para reduced-motion em vez de 2 efeitos separados (resultado final idêntico).
+- **Commits**: feitos como micro-commits semânticos (6 commits) em vez de um único monolítico. Incluiu commit extra para o plano (`chore(brief)`).
+- **76 background**: usa `style` inline com `oklch(1 0 0 / 0.03)` para o 3% de opacidade (sem classe utilitária extra — consistente com o `racing-number-bg` existente mas com valor mais baixo conforme plano).
+
+---
+
+## Próximo passo
+
+→ Rodar agent `walkthrough` para validação de acessibilidade, performance e responsividade antes do PR.
