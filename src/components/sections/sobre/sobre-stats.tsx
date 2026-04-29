@@ -1,90 +1,157 @@
 "use client";
 
-import { useRef, useEffect } from "react";
 import {
   motion,
   useInView,
-  useMotionValue,
   useReducedMotion,
-  useSpring,
-  useTransform,
+  type Variants,
 } from "framer-motion";
+import { useRef } from "react";
+import { FlipCounter } from "@/components/motion/flip-counter";
+
+/**
+ * SobreStats — 4 contadores massivos com tratamento racing premium:
+ *
+ *   1. Cascata orquestrada via `staggerChildren` no parent
+ *   2. Linha vermelha cresce de 0→100% acima de cada número (drawn line)
+ *   3. FlipCounter conta de 0 → valor com flip 3D nos dígitos
+ *   4. O último stat ("76") tem pulse infinito sutil — assinatura do piloto
+ *   5. Cada item entra com clip-path mask reveal vertical
+ *   6. Index "01–04" pequenino acima de cada label, em mono
+ *
+ * Reduced-motion: pula direto pro valor final, sem cascata, sem pulse.
+ */
 
 type StatItem = {
+  index: string;
   value: number;
   label: string;
   ariaLabel: string;
+  signature?: boolean;
 };
 
 const STATS: StatItem[] = [
-  { value: 49, label: "anos", ariaLabel: "49 anos de idade" },
-  { value: 13, label: "temporadas", ariaLabel: "13 temporadas consecutivas" },
-  { value: 6, label: "títulos", ariaLabel: "6 títulos conquistados" },
-  { value: 76, label: "número", ariaLabel: "Número 76 de corrida" },
+  { index: "01", value: 49, label: "Anos", ariaLabel: "49 anos de idade" },
+  {
+    index: "02",
+    value: 13,
+    label: "Temporadas",
+    ariaLabel: "13 temporadas consecutivas",
+  },
+  {
+    index: "03",
+    value: 6,
+    label: "Títulos",
+    ariaLabel: "6 títulos conquistados",
+  },
+  {
+    index: "04",
+    value: 76,
+    label: "Número",
+    ariaLabel: "Número 76 de corrida",
+    signature: true,
+  },
 ];
 
-function AnimatedCounter({ value, inView, reduceMotion }: { value: number; inView: boolean; reduceMotion: boolean | null }) {
-  const motionVal = useMotionValue(0);
-  const spring = useSpring(motionVal, {
-    stiffness: 80,
-    damping: 20,
-    mass: 1,
-  });
-  const display = useTransform(spring, (v) => Math.round(v));
+const containerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.14, delayChildren: 0.1 },
+  },
+};
 
-  useEffect(() => {
-    if (inView) {
-      motionVal.set(reduceMotion ? value : value);
-    }
-  }, [inView, motionVal, value, reduceMotion]);
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 32, clipPath: "inset(0 0 100% 0)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    clipPath: "inset(0 0 0% 0)",
+    transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] },
+  },
+};
 
-  useEffect(() => {
-    if (!inView) return;
-    if (reduceMotion) {
-      motionVal.jump(value);
-    } else {
-      motionVal.set(value);
-    }
-  }, [inView, reduceMotion, motionVal, value]);
-
-  return <motion.span>{display}</motion.span>;
-}
+const barVariants: Variants = {
+  hidden: { scaleX: 0 },
+  visible: {
+    scaleX: 1,
+    transition: { duration: 0.85, ease: [0.85, 0, 0.15, 1], delay: 0.1 },
+  },
+};
 
 export function SobreStats() {
+  const reduce = useReducedMotion();
   const containerRef = useRef<HTMLDivElement>(null);
-  const reduceMotion = useReducedMotion();
-  const inView = useInView(containerRef, { once: true, margin: "-100px" });
+  const inView = useInView(containerRef, { once: true, amount: 0.2 });
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
-      className="grid grid-cols-2 gap-6 lg:grid-cols-4"
+      initial="hidden"
+      animate={inView ? "visible" : "hidden"}
+      variants={reduce ? undefined : containerVariants}
+      className="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4 sm:gap-x-8"
     >
-      {STATS.map((stat, i) => (
+      {STATS.map((stat) => (
         <motion.div
           key={stat.label}
           aria-label={stat.ariaLabel}
-          initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : undefined}
-          transition={
-            reduceMotion
-              ? { duration: 0.01 }
-              : { delay: i * 0.1, duration: 0.4, ease: "easeOut" }
-          }
-          className="flex flex-col items-center gap-1 lg:items-start"
+          variants={reduce ? undefined : itemVariants}
+          style={{ willChange: "clip-path, opacity, transform" }}
+          className="relative flex flex-col"
         >
-          <span className="font-mono text-[2.5rem] font-bold leading-none text-racing-white lg:text-[3.5rem]">
-            <AnimatedCounter
+          {/* Index — "01" / "02" etc. acima do bar */}
+          <span className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.35em] text-racing-red/80">
+            {stat.index}
+          </span>
+
+          {/* Bar vermelha — cresce horizontal */}
+          <motion.span
+            aria-hidden
+            variants={reduce ? undefined : barVariants}
+            style={{ transformOrigin: "left center", willChange: "transform" }}
+            className="mb-3 block h-[2px] w-full bg-racing-red"
+          />
+
+          {/* Número — FlipCounter + pulse sutil no signature ("76") */}
+          <motion.span
+            animate={
+              reduce || !stat.signature || !inView
+                ? undefined
+                : {
+                    textShadow: [
+                      "0 0 0px rgba(217,57,71,0)",
+                      "0 0 24px rgba(217,57,71,0.5)",
+                      "0 0 0px rgba(217,57,71,0)",
+                    ],
+                  }
+            }
+            transition={
+              stat.signature
+                ? {
+                    duration: 2.6,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 2,
+                  }
+                : undefined
+            }
+            className={`font-display text-[clamp(3rem,7vw,5.5rem)] leading-[0.85] tracking-tight ${
+              stat.signature ? "text-racing-white" : "text-racing-white"
+            }`}
+          >
+            <FlipCounter
               value={stat.value}
               inView={inView}
-              reduceMotion={reduceMotion}
+              duration={stat.signature ? 1.9 : 1.5}
             />
-          </span>
-          <span className="text-xs font-medium uppercase tracking-wider text-racing-mute">
+          </motion.span>
+
+          {/* Label */}
+          <span className="mt-3 font-mono text-[10px] font-medium uppercase tracking-[0.35em] text-racing-mute">
             {stat.label}
           </span>
         </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }
