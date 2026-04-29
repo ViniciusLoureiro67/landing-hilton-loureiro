@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Worktrees do Claude (artefatos de build de outros agentes) —
+    // não devem entrar no lint do repo principal.
+    ".claude/worktrees/**",
   ]),
 ]);
 
