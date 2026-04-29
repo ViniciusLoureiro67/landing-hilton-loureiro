@@ -1,62 +1,43 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Hook compartilhado entre os 8 client components do hero. Responde:
- * "devo pular a sequência de entrada (ignição + reveal + stagger longo)?"
+ * "devo pular a sequência cinematográfica de entrada (semáforo de
+ * largada + reveal do nome + stagger longo)?"
  *
- * Regra: pula se a sessão atual já viu o hero rodar ao menos uma vez.
- * Persistido em `sessionStorage.hero-played` (não em `localStorage` — a
- * primeira visita do dia merece a entrada cinematográfica).
+ * Política (descrita por intenção, não por implementação):
+ *
+ *   - Visita inicial / nova aba .................. SEMPRE TOCA
+ *   - F5 / Cmd-R / hard refresh .................. SEMPRE TOCA
+ *   - Botão voltar ou bfcache (`pageshow.persisted`) PULA
+ *   - `prefers-reduced-motion` ................... PULA (componente decide)
+ *
+ * Implementação: o estado padrão é `false` (= não pula = toca a animação).
+ * O único momento em que o hook retorna `true` é quando a página foi
+ * restaurada do bfcache do browser (usuário voltou via histórico). Isso
+ * preserva a ideia: o gesto deliberado de F5 sempre repete o show.
  *
  * SSR: retorna `false` (anima sempre na primeira renderização).
- * Client mount: `useSyncExternalStore` lê `sessionStorage` sincronamente
- * antes do paint, então já no primeiro render do client a flag está
- * correta — sem flicker entre "começou a animar → snap final".
- *
- * Após 3s do mount (tempo da sequência inteira ~2.7s + folga), marca
- * `sessionStorage.hero-played = 1`. Se o usuário recarregar dentro da
- * mesma aba, próxima passada do hook retorna `true` e os componentes
- * pulam delays/animações de entrada.
  */
 
-const STORAGE_KEY = "hero-played";
-
-const subscribe = () => () => {};
-
-function getClientSnapshot(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return window.sessionStorage.getItem(STORAGE_KEY) === "1";
-  } catch {
-    // Acesso a sessionStorage pode falhar em modo privado / iframe sandbox
-    return false;
-  }
-}
-
-function getServerSnapshot(): boolean {
-  return false;
-}
-
 export function useHeroEntrySkip(): boolean {
-  const skip = useSyncExternalStore(
-    subscribe,
-    getClientSnapshot,
-    getServerSnapshot
-  );
+  const [skip, setSkip] = useState(false);
 
   useEffect(() => {
-    if (skip) return;
-    const id = window.setTimeout(() => {
-      try {
-        window.sessionStorage.setItem(STORAGE_KEY, "1");
-      } catch {
-        /* noop */
+    // bfcache: páginas restauradas do back/forward cache disparam
+    // `pageshow` com `event.persisted === true`. O DOM já está montado
+    // como antes, então não faz sentido refazer a sequência.
+    function onPageShow(event: PageTransitionEvent) {
+      if (event.persisted) {
+        setSkip(true);
       }
-    }, 3000);
-    return () => window.clearTimeout(id);
-  }, [skip]);
+    }
+
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   return skip;
 }
