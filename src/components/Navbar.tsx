@@ -45,10 +45,15 @@ export function Navbar() {
   // (3.1s) + 0.1s de respiro pra entrar junto com o kicker. Em qualquer
   // outra rota futura ou em retorno via histórico/back-forward, navbar
   // entra rápido (0.2s) — não pode parecer travado.
+  //
+  // Easing: `easeOut` simples é deliberado. Curvas tipo expo-out
+  // (`[0.16, 1, 0.3, 1]`) desaceleram tanto no final que dão sensação
+  // de "travar pela metade", o que num elemento sólido como o navbar
+  // fica feio (em texto que entra com clip-path passa despercebido).
   const isHome = pathname === "/";
   const cinematicEntry = isHome && !reduceMotion && !skipEntry;
   const headerTransition = cinematicEntry
-    ? { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const, delay: 3.2 }
+    ? { duration: 0.65, ease: "easeOut" as const, delay: 3.2 }
     : { duration: 0.4, ease: "easeOut" as const, delay: 0.2 };
 
   return (
@@ -56,8 +61,13 @@ export function Navbar() {
       initial={{ y: -32, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={headerTransition}
+      // `transition-colors` (não `transition-all`) — restringimos ao
+      // grupo de cor/borda/backdrop pra **NÃO** brigar com o framer-motion
+      // que controla opacity+transform via JS. Quando `transition-all`
+      // estava aqui, o CSS interpolava por cima do JS e a entrada do
+      // navbar parecia travar pela metade antes de completar.
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-all duration-500",
+        "fixed inset-x-0 top-0 z-50 transition-[background-color,backdrop-filter,border-color] duration-500 ease-out",
         scrolled
           ? "bg-racing-blue-deep/75 backdrop-blur-xl border-b border-white/5"
           : "bg-transparent"
