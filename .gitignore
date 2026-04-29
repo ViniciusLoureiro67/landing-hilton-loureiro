@@ -42,6 +42,7 @@ next-env.d.ts
 
 # claude code (local-only, per-machine permissions)
 .claude/settings.local.json
+.claude/worktrees/
 
 # ephemeral working files (PDF extraction, scratchpads)
 tmp/

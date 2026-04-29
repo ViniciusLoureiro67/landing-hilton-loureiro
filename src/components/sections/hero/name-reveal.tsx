@@ -23,8 +23,10 @@ function buildMaskParent(skipEntry: boolean): Variants {
     hidden: {},
     show: {
       transition: {
-        staggerChildren: skipEntry ? 0 : 0.18,
-        delayChildren: skipEntry ? 0 : 1.3,
+        staggerChildren: skipEntry ? 0 : 0.22,
+        // Casa com `LIGHTS_OUT_AT + 0.2`: nome começa a varrer logo
+        // depois das luzes apagarem e o flash explodir.
+        delayChildren: skipEntry ? 0 : 3.3,
       },
     },
   };
@@ -39,13 +41,11 @@ const MASK_LINE: Variants = {
   },
 };
 
-const MASK_UNDERLINE: Variants = {
-  hidden: { scaleX: 0 },
-  show: {
-    scaleX: 1,
-    transition: { duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] },
-  },
-};
+// Delay absoluto pra a sublinha — usa esse valor independente do stagger
+// do parent. Casa com `delayChildren (3.3) + 2 * stagger (0.22) + duração
+// do reveal (0.85) ≈ 4.59s` → underline aparece DEPOIS de "Loureiro" estar
+// completamente visível, não antes.
+const UNDERLINE_DELAY = 4.6;
 
 const REDUCED_PARENT: Variants = {
   hidden: {},
@@ -66,57 +66,72 @@ export function NameReveal() {
   const line = reduceMotion ? REDUCED_CHILD : MASK_LINE;
 
   return (
-    <motion.h1
-      initial="hidden"
-      animate="show"
-      variants={parent}
-      className="font-display uppercase leading-[0.82] tracking-[-0.02em] text-racing-white"
-    >
-      <span className="sr-only">Hilton Loureiro</span>
+    <>
+      <motion.h1
+        initial="hidden"
+        animate="show"
+        variants={parent}
+        className="font-display uppercase leading-[0.82] tracking-[-0.02em] text-racing-white"
+      >
+        <span className="sr-only">Hilton Loureiro</span>
 
-      {/* Linha 1 — HILTON, outline grosso. Clip-path corre dentro do
-          `overflow-hidden`. drop-shadow forte para destacar sobre a foto. */}
-      <span aria-hidden className="block overflow-hidden pb-1">
-        <motion.span
-          variants={line}
-          className="block text-[3.75rem] sm:text-[5rem] lg:text-[7.5rem] xl:text-[9.5rem]"
-          style={{
-            WebkitTextStroke: reduceMotion ? "0" : "2.5px oklch(0.97 0 0)",
-            color: reduceMotion ? "var(--racing-white)" : "transparent",
-            filter: reduceMotion
-              ? "none"
-              : "drop-shadow(0 6px 24px oklch(0 0 0 / 0.55))",
-          }}
-        >
-          Hilton
-        </motion.span>
-      </span>
+        {/* Linha 1 — HILTON, outline grosso. Clip-path corre dentro do
+            `overflow-hidden`. drop-shadow forte para destacar sobre a foto. */}
+        <span aria-hidden className="block overflow-hidden pb-1">
+          <motion.span
+            variants={line}
+            className="block text-[3.75rem] sm:text-[5rem] lg:text-[7.5rem] xl:text-[9.5rem]"
+            style={{
+              WebkitTextStroke: reduceMotion ? "0" : "2.5px oklch(0.97 0 0)",
+              color: reduceMotion ? "var(--racing-white)" : "transparent",
+              filter: reduceMotion
+                ? "none"
+                : "drop-shadow(0 6px 24px oklch(0 0 0 / 0.55))",
+            }}
+          >
+            Hilton
+          </motion.span>
+        </span>
 
-      {/* Linha 2 — LOUREIRO, sólido com drop-shadow para legibilidade. */}
-      <span aria-hidden className="block overflow-hidden pb-1">
-        <motion.span
-          variants={line}
-          className="block text-[3.75rem] text-racing-white sm:text-[5rem] lg:text-[7.5rem] xl:text-[9.5rem]"
-          style={{
-            filter: reduceMotion
-              ? "none"
-              : "drop-shadow(0 6px 24px oklch(0 0 0 / 0.55))",
-          }}
-        >
-          Loureiro
-        </motion.span>
-      </span>
+        {/* Linha 2 — LOUREIRO, sólido com drop-shadow para legibilidade. */}
+        <span aria-hidden className="block overflow-hidden pb-1">
+          <motion.span
+            variants={line}
+            className="block text-[3.75rem] text-racing-white sm:text-[5rem] lg:text-[7.5rem] xl:text-[9.5rem]"
+            style={{
+              filter: reduceMotion
+                ? "none"
+                : "drop-shadow(0 6px 24px oklch(0 0 0 / 0.55))",
+            }}
+          >
+            Loureiro
+          </motion.span>
+        </span>
+      </motion.h1>
 
       {/* Sublinha vermelha que cresce sob o nome — assinatura visual, ecoa
-          o slash do logo "76". Aria-hidden, decorativo. */}
+          o slash do logo "76". Aria-hidden, decorativo.
+          
+          IMPORTANTE: foi separada do `motion.h1` parent porque, ao ficar
+          dentro do staggerChildren, o `delay` próprio da transition
+          sobrescrevia o `delayChildren` do pai e fazia a barra aparecer
+          ANTES da sequência de ignição (em ~0.3s). Agora controla o
+          timing absoluto (`UNDERLINE_DELAY`), garantindo que entra DEPOIS
+          do reveal completo do nome. */}
       {!reduceMotion && (
         <motion.span
           aria-hidden
-          variants={MASK_UNDERLINE}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{
+            delay: skipEntry ? 0 : UNDERLINE_DELAY,
+            duration: 0.7,
+            ease: [0.16, 1, 0.3, 1],
+          }}
           style={{ originX: 0 }}
           className="mt-3 block h-[3px] w-32 bg-racing-red sm:mt-4 sm:w-44 lg:w-56"
         />
       )}
-    </motion.h1>
+    </>
   );
 }

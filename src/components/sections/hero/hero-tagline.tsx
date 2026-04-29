@@ -21,7 +21,7 @@ export function HeroTagline() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        delay: skipAll ? 0 : 1.85,
+        delay: skipAll ? 0 : 3.85,
         duration: skipAll ? 0.01 : 0.55,
         ease: "easeOut",
       }}
@@ -30,9 +30,9 @@ export function HeroTagline() {
       <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-racing-mute sm:text-xs">
         Piloto profissional
         <span className="mx-2 text-racing-red">/</span>
-        Moto1000GP 2026
+        600cc Master 2026
         <span className="mx-2 text-racing-red">/</span>
-        Yamaha YZF-R1
+        Kawasaki ZX6R
       </p>
 
       <p className="max-w-xl font-heading text-base uppercase leading-snug tracking-[0.04em] text-racing-white/90 sm:text-lg lg:text-xl">
@@ -40,8 +40,8 @@ export function HeroTagline() {
         Endurance{" "}
         <span className="font-mono text-racing-yellow">600cc</span>.
         <br className="hidden sm:block" />
-        Em 2026 sobe para o{" "}
-        <span className="text-racing-yellow">Moto1000GP</span>.
+        Em 2026 defende o título pela equipe{" "}
+        <span className="text-racing-yellow">NRT</span>.
       </p>
     </motion.div>
   );

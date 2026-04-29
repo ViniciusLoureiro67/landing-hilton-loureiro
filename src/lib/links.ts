@@ -23,7 +23,7 @@ export const WHATSAPP_HREF = buildWhatsappHref(
  * Persona-alvo: patrocinador / mídia chegando pela primeira vez.
  */
 export const WHATSAPP_HERO_HREF = buildWhatsappHref(
-  "Olá Hilton, vim pelo site oficial e quero saber mais sobre o projeto Moto1000GP 2026."
+  "Olá Hilton, vim pelo site oficial e quero saber mais sobre o projeto da temporada 2026."
 );
 
 export const INSTAGRAM_HREF = "https://www.instagram.com/hilton_loureiro76/";

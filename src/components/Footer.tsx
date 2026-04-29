@@ -36,7 +36,7 @@ export function Footer() {
         <div className="lg:col-span-5">
           <Hilton76Logo className="h-10 w-auto" />
           <p className="mt-4 max-w-sm text-sm text-racing-mute">
-            Piloto profissional do Campeonato Brasileiro Moto1000GP.
+            Piloto profissional · 600cc Master, equipe NRT, Kawasaki ZX6R.
             Bicampeão Brasileiro Endurance 600cc (2024–2025).
           </p>
         </div>

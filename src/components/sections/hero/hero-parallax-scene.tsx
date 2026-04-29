@@ -11,6 +11,7 @@ import {
   type MotionValue,
 } from "framer-motion";
 import { useHeroEntrySkip } from "./use-hero-entry-skip";
+import { useHeroScrollProgress } from "./hero-scroll-context";
 
 /**
  * Camadas de fundo do hero com parallax de mouse — o usuário move o
@@ -172,21 +173,51 @@ export function HeroParallaxScene() {
   const lines = useParallaxOffset(sx, sy, SPEEDLINES_STRENGTH);
   const numberRef = useRef<HTMLDivElement>(null);
 
+  // Scroll-driven: enquanto o usuário rola o hero pra fora, o "76"
+  // sobe mais rápido que a foto (parallax invertido) e ganha um leve
+  // upscale + fade — sai com peso, não some.
+  const scrollProgress = useHeroScrollProgress();
+  const numberScrollY = useTransform(scrollProgress, [0, 1], [0, -160]);
+  const numberScrollScale = useTransform(scrollProgress, [0, 1], [1, 1.08]);
+  const numberScrollOpacity = useTransform(scrollProgress, [0, 0.55, 0.9], [1, 0.7, 0]);
+  // Foto sobe mais lento que o restante — parallax clássico.
+  const photoScrollY = useTransform(scrollProgress, [0, 1], [0, -90]);
+  const photoScrollScale = useTransform(scrollProgress, [0, 1], [1.06, 1.12]);
+  // Speedlines aceleram/se inclinam levemente conforme rola.
+  const linesScrollY = useTransform(scrollProgress, [0, 1], [0, -32]);
+
+  // Combinações mouse-parallax + scroll-driven. Mantemos os hooks
+  // **fora** de ternários no JSX (regras dos hooks: nº de chamadas
+  // por render precisa ser estável, mesmo se reduceMotion alterna).
+  const photoY = useTransform(
+    [photo.ty, photoScrollY] as MotionValue<number>[],
+    ([a, b]: number[]) => a + b
+  );
+  const linesY = useTransform(
+    [lines.ty, linesScrollY] as MotionValue<number>[],
+    ([a, b]: number[]) => a + b
+  );
+  const numberY = useTransform(
+    [number.ty, numberScrollY] as MotionValue<number>[],
+    ([a, b]: number[]) => a + b
+  );
+
   return (
     <>
       {/* Camada 1 — foto (mais ao fundo).
           `<picture>` com `<source media>` resolve responsividade num único
           `<img>` no DOM: o browser escolhe a srcset correta antes de
           baixar. Evita o trick `sizes="0px"` e o duplo preload. Cada
-          srcset ainda passa pelo otimizador do next/image (AVIF/WebP). */}
+          srcset ainda passa pelo otimizador do next/image (AVIF/WebP).
+          Scroll-driven: parallax leve e zoom progressivo. */}
       <motion.div
         aria-hidden
         style={
           reduceMotion
             ? undefined
-            : { x: photo.tx, y: photo.ty, scale: 1.06 }
+            : { x: photo.tx, y: photoY, scale: photoScrollScale }
         }
-        className="absolute inset-0 -z-30"
+        className="absolute inset-0 -z-30 will-change-transform"
       >
         <ResponsiveHeroPhoto />
       </motion.div>
@@ -206,32 +237,49 @@ export function HeroParallaxScene() {
         className="absolute inset-y-0 right-0 -z-20 hidden w-1/2 bg-gradient-to-l from-racing-blue-deep/60 via-transparent to-transparent sm:block"
       />
 
-      {/* Camada 3 — speedlines diagonais ambient */}
+      {/* Camada 3 — speedlines diagonais ambient. Scroll: leve translate-y
+          extra que somado ao parallax do mouse acelera ao rolar. */}
       <motion.div
         aria-hidden
-        style={reduceMotion ? undefined : { x: lines.tx, y: lines.ty }}
+        style={reduceMotion ? undefined : { x: lines.tx, y: linesY }}
         className="hero-speedlines pointer-events-none absolute inset-0 -z-10 opacity-80"
       />
 
       {/* Camada 4 — número 76 ENORME no lado direito.
           Em mobile vira marca d'água atrás de tudo (ainda visível); em
-          desktop sangra pela borda direita e domina ~60% da viewport. */}
+          desktop sangra pela borda direita e domina ~60% da viewport.
+
+          Estrutura em 2 camadas pra evitar conflito entre `initial/animate`
+          (entry) e `style` com motion values (scroll-driven):
+            - outer: posição (x do mouse + y combinado) + scale/opacity
+                     do scroll. Persistente.
+            - inner: entry one-shot (opacity 0→1, scale 1.06→1) que
+                     dispara após o flash da largada (delay 3.55s). */}
       <motion.div
         ref={numberRef}
         aria-hidden
-        initial={skipAll ? { opacity: 1 } : { opacity: 0, scale: 1.06 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={
-          skipAll
-            ? { duration: 0.01 }
-            : { delay: 1.55, duration: 1.1, ease: [0.16, 1, 0.3, 1] }
-        }
         style={
-          reduceMotion ? undefined : { x: number.tx, y: number.ty }
+          reduceMotion
+            ? undefined
+            : {
+                x: number.tx,
+                y: numberY,
+                scale: numberScrollScale,
+                opacity: numberScrollOpacity,
+              }
         }
-        className="pointer-events-none absolute -bottom-[12vw] right-[-10vw] -z-10 select-none sm:-bottom-[8vw] sm:right-[-6vw] lg:-bottom-[6vw] lg:right-[-4vw]"
+        className="pointer-events-none absolute -bottom-[12vw] right-[-10vw] -z-10 select-none will-change-transform sm:-bottom-[8vw] sm:right-[-6vw] lg:-bottom-[6vw] lg:right-[-4vw]"
       >
-        <span className="relative inline-block">
+        <motion.span
+          className="relative inline-block"
+          initial={skipAll ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.06 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={
+            skipAll
+              ? { duration: 0.01 }
+              : { delay: 3.55, duration: 1.1, ease: [0.16, 1, 0.3, 1] }
+          }
+        >
           {/* 7 — outline em azul-bright forte, com slash vermelho diagonal
               atravessando (assinatura do logo HILTON76). Stroke grosso e
               opacity alta para competir com a foto/overlay. */}
@@ -271,7 +319,7 @@ export function HeroParallaxScene() {
           >
             6
           </span>
-        </span>
+        </motion.span>
       </motion.div>
 
       {/* Camada 5 — grain de filme sobre tudo, mix-blend overlay */}
