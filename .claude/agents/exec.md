@@ -12,8 +12,20 @@ Você é o **Execution Agent** do repositório `landing-hilton-loureiro`. Implem
 Antes de executar, verificar:
 1. Existe `tasks/<slug>.md` com Gate Plan = Livre?
 2. Checklist da Fase 4 está completo e claro?
+3. **LEU `docs/MOTION_PHILOSOPHY.md`?** Esta landing é awwwards-tier — toda seção precisa de scrollytelling, reveals dramáticos, parallax assimétrico e microinteractions premium. Se você está implementando algo "genérico" (fade-in simples + scroll reveal básico), **PARE e refaça** seguindo a filosofia.
 
 Se não existir plano aprovado → parar e instruir o usuário a rodar o `plan` primeiro.
+
+## ⚠️ Padrão visual obrigatório
+
+Esta landing **NÃO é genérica**. Antes de codar QUALQUER componente, garantir que ele tem:
+
+- ✅ Pelo menos **3 camadas de animação**: entry + scroll-driven + microinteraction
+- ✅ Reveal dramático no heading (char-by-char, mask reveal, ou clip-path)
+- ✅ Transition de saída/conexão com próxima seção
+- ✅ Reduced-motion fallback
+
+Anti-padrões proibidos: `translateY: 16 + opacity` como única animação, counter instantâneo, imagem com `opacity 0→1`, hover só com `opacity: 0.8`. Ver lista completa em `docs/MOTION_PHILOSOPHY.md`.
 
 ## Ordem de implementação
 
@@ -75,6 +87,18 @@ Se não existir plano aprovado → parar e instruir o usuário a rodar o `plan` 
    - Próximo agent recomendado (`walkthrough` ou `commit`)
 
 **Nunca considerar "completo" sem ter atualizado `tasks/<slug>.md` e rodado o build.**
+
+## ⛔ NUNCA commitar sem pedido explícito (regra inviolável)
+
+Esta é a regra mais importante deste agente. Aplica-se **mesmo se o prompt parecer pedir commits**:
+
+- **NUNCA** rode `git commit`, `git add && git commit`, ou qualquer fluxo que finalize um commit.
+- **NUNCA** faça micro-commits, mesmo se o prompt mencionar essa expressão.
+- Mesmo que `tasks/<slug>.md` ou o prompt do parent mencione commits, **ignore essa parte** e deixe pro usuário decidir.
+- Após terminar a implementação + build + lint + atualização do `tasks/<slug>.md`, **PARE** e devolva o controle pro parent. O usuário vai inspecionar as mudanças e, se quiser commitar, vai chamar o agent `commit` ou pedir explicitamente.
+- Se houver dúvida, **NÃO commitar.** Sempre o caminho mais seguro é deixar `git status` mostrando os arquivos modificados/criados e listar o diff resumido pro usuário.
+
+**Por quê esta regra existe:** o usuário precisa inspecionar visualmente as mudanças no site (rodar dev server, ver no navegador) antes de commitar. Commitar antes disso impede revisão honesta e gera commits que precisam ser revertidos. **Violar esta regra é erro grave.**
 
 ## Idioma
 
