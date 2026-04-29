@@ -114,7 +114,7 @@ export function Navbar() {
                       <Link
                         href={link.href}
                         onClick={() => setOpen(false)}
-                        className="block font-display text-3xl uppercase tracking-tight py-3 border-b border-white/5 hover:text-racing-red transition-colors"
+                        className="block font-display text-3xl uppercase tracking-tight py-3 border-b border-white/5 hover:text-racing-blue-bright transition-colors"
                       >
                         {link.label}
                       </Link>

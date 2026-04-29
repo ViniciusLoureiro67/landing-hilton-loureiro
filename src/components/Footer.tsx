@@ -50,10 +50,10 @@ export function Footer() {
             Site
           </h3>
           <ul className="mt-4 flex flex-col gap-2 text-sm">
-            <li><Link href="#sobre" className="hover:text-racing-red transition-colors">Sobre</Link></li>
-            <li><Link href="#temporada" className="hover:text-racing-red transition-colors">Temporada 2026</Link></li>
-            <li><Link href="#galeria" className="hover:text-racing-red transition-colors">Galeria</Link></li>
-            <li><Link href="#patrocinio" className="hover:text-racing-red transition-colors">Para sua marca</Link></li>
+            <li><Link href="#sobre" className="hover:text-racing-blue-bright transition-colors">Sobre</Link></li>
+            <li><Link href="#temporada" className="hover:text-racing-blue-bright transition-colors">Temporada 2026</Link></li>
+            <li><Link href="#galeria" className="hover:text-racing-blue-bright transition-colors">Galeria</Link></li>
+            <li><Link href="#patrocinio" className="hover:text-racing-blue-bright transition-colors">Para sua marca</Link></li>
           </ul>
         </nav>
 
@@ -67,9 +67,9 @@ export function Footer() {
                 href={WHATSAPP_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-3 hover:text-racing-red transition-colors"
+                className="group inline-flex items-center gap-3 hover:text-racing-blue-bright transition-colors"
               >
-                <MessageCircle className="size-4 text-racing-red" />
+                <MessageCircle className="size-4 text-racing-blue-bright" />
                 <span>WhatsApp <span className="text-racing-mute">· (82) 99669-6666</span></span>
               </a>
             </li>
@@ -78,18 +78,18 @@ export function Footer() {
                 href={INSTAGRAM_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-3 hover:text-racing-red transition-colors"
+                className="group inline-flex items-center gap-3 hover:text-racing-blue-bright transition-colors"
               >
-                <InstagramIcon className="size-4 text-racing-red" />
+                <InstagramIcon className="size-4 text-racing-blue-bright" />
                 <span>@hilton_loureiro76</span>
               </a>
             </li>
             <li>
               <a
                 href={EMAIL_HREF}
-                className="group inline-flex items-center gap-3 hover:text-racing-red transition-colors"
+                className="group inline-flex items-center gap-3 hover:text-racing-blue-bright transition-colors"
               >
-                <Mail className="size-4 text-racing-red" />
+                <Mail className="size-4 text-racing-blue-bright" />
                 <span>hiltonloureiro@hotmail.com</span>
               </a>
             </li>

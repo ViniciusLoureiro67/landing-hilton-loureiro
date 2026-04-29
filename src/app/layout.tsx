@@ -84,7 +84,7 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} ${anton.variable} ${sairaCondensed.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-racing-red selection:text-racing-white">
+      <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-racing-blue-bright selection:text-racing-white">
         <SmoothScrollProvider>
           <Navbar />
           <main className="flex flex-col flex-1">{children}</main>

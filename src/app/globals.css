@@ -15,6 +15,7 @@
 
   --color-racing-blue: var(--racing-blue);
   --color-racing-blue-deep: var(--racing-blue-deep);
+  --color-racing-blue-bright: var(--racing-blue-bright);
   --color-racing-red: var(--racing-red);
   --color-racing-white: var(--racing-white);
   --color-racing-yellow: var(--racing-yellow);
@@ -60,88 +61,91 @@
 }
 
 :root {
-  --racing-blue: oklch(0.22 0.08 264);
-  --racing-blue-deep: oklch(0.13 0.05 260);
+  /* Brand palette — blue-dominant (Sonic + Alagoas), red as accent only */
+  --racing-blue-deep: oklch(0.12 0.04 258);
+  --racing-blue: oklch(0.28 0.12 254);
+  --racing-blue-bright: oklch(0.62 0.20 252);
   --racing-red: oklch(0.58 0.23 27);
   --racing-white: oklch(0.97 0 0);
   --racing-yellow: oklch(0.86 0.18 95);
   --racing-asphalt: oklch(0.18 0.01 260);
-  --racing-mute: oklch(0.65 0.02 250);
+  --racing-mute: oklch(0.68 0.02 250);
 
   --background: var(--racing-blue-deep);
   --foreground: var(--racing-white);
 
-  --card: oklch(0.18 0.04 262);
+  --card: oklch(0.17 0.04 260);
   --card-foreground: var(--racing-white);
-  --popover: oklch(0.18 0.04 262);
+  --popover: oklch(0.17 0.04 260);
   --popover-foreground: var(--racing-white);
-  --primary: var(--racing-red);
+  --primary: var(--racing-blue-bright);
   --primary-foreground: var(--racing-white);
-  --secondary: oklch(0.27 0.06 263);
+  --secondary: oklch(0.25 0.07 258);
   --secondary-foreground: var(--racing-white);
-  --muted: oklch(0.22 0.04 262);
+  --muted: oklch(0.22 0.05 260);
   --muted-foreground: var(--racing-mute);
-  --accent: var(--racing-red);
+  --accent: var(--racing-blue-bright);
   --accent-foreground: var(--racing-white);
-  --destructive: oklch(0.58 0.23 27);
+  --destructive: var(--racing-red);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 12%);
-  --ring: var(--racing-red);
+  --ring: var(--racing-blue-bright);
 
-  --chart-1: var(--racing-red);
-  --chart-2: var(--racing-blue);
+  --chart-1: var(--racing-blue-bright);
+  --chart-2: var(--racing-red);
   --chart-3: var(--racing-yellow);
-  --chart-4: oklch(0.45 0.05 260);
+  --chart-4: oklch(0.45 0.10 256);
   --chart-5: oklch(0.65 0.02 250);
 
   --radius: 0.5rem;
 
   --sidebar: var(--racing-blue-deep);
   --sidebar-foreground: var(--racing-white);
-  --sidebar-primary: var(--racing-red);
+  --sidebar-primary: var(--racing-blue-bright);
   --sidebar-primary-foreground: var(--racing-white);
-  --sidebar-accent: oklch(0.22 0.04 262);
+  --sidebar-accent: oklch(0.22 0.05 260);
   --sidebar-accent-foreground: var(--racing-white);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: var(--racing-red);
+  --sidebar-ring: var(--racing-blue-bright);
 }
 
 .dark {
-  --racing-blue: oklch(0.22 0.08 264);
-  --racing-blue-deep: oklch(0.13 0.05 260);
+  --racing-blue-deep: oklch(0.12 0.04 258);
+  --racing-blue: oklch(0.28 0.12 254);
+  --racing-blue-bright: oklch(0.62 0.20 252);
   --racing-red: oklch(0.58 0.23 27);
   --racing-white: oklch(0.97 0 0);
   --racing-yellow: oklch(0.86 0.18 95);
   --racing-asphalt: oklch(0.18 0.01 260);
-  --racing-mute: oklch(0.65 0.02 250);
+  --racing-mute: oklch(0.68 0.02 250);
 
   --background: var(--racing-blue-deep);
   --foreground: var(--racing-white);
-  --card: oklch(0.18 0.04 262);
+  --card: oklch(0.17 0.04 260);
   --card-foreground: var(--racing-white);
-  --popover: oklch(0.18 0.04 262);
+  --popover: oklch(0.17 0.04 260);
   --popover-foreground: var(--racing-white);
-  --primary: var(--racing-red);
+  --primary: var(--racing-blue-bright);
   --primary-foreground: var(--racing-white);
-  --secondary: oklch(0.27 0.06 263);
+  --secondary: oklch(0.25 0.07 258);
   --secondary-foreground: var(--racing-white);
-  --muted: oklch(0.22 0.04 262);
+  --muted: oklch(0.22 0.05 260);
   --muted-foreground: var(--racing-mute);
-  --accent: var(--racing-red);
+  --accent: var(--racing-blue-bright);
   --accent-foreground: var(--racing-white);
-  --destructive: oklch(0.58 0.23 27);
+  --destructive: var(--racing-red);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 12%);
-  --ring: var(--racing-red);
+  --ring: var(--racing-blue-bright);
 
   --sidebar: var(--racing-blue-deep);
   --sidebar-foreground: var(--racing-white);
-  --sidebar-primary: var(--racing-red);
+  --sidebar-primary: var(--racing-blue-bright);
   --sidebar-primary-foreground: var(--racing-white);
-  --sidebar-accent: oklch(0.22 0.04 262);
+  --sidebar-accent: oklch(0.22 0.05 260);
   --sidebar-accent-foreground: var(--racing-white);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: var(--racing-red);
+  --sidebar-ring: var(--racing-blue-bright);
 }
 
 @layer base {

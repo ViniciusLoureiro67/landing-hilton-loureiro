@@ -18,7 +18,7 @@ export default function Home() {
         <div className="relative mx-auto flex max-w-4xl flex-col items-center text-center">
           <Badge
             variant="secondary"
-            className="mb-6 bg-racing-red/15 text-racing-red border-racing-red/30 font-heading uppercase tracking-[0.25em]"
+            className="mb-6 bg-racing-blue-bright/15 text-racing-blue-bright border-racing-blue-bright/30 font-heading uppercase tracking-[0.25em]"
           >
             Em construção · Temporada 2026
           </Badge>
@@ -28,7 +28,7 @@ export default function Home() {
             <br />
             <span className="inline-flex items-center gap-2">
               Loureiro
-              <span className="relative ml-3 inline-block text-racing-red">
+              <span className="relative ml-3 inline-block text-racing-blue-bright">
                 76
               </span>
             </span>
