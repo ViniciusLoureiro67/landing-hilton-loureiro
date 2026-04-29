@@ -59,77 +59,112 @@ export function IgnitionLights() {
         }}
         className="pointer-events-none absolute left-1/2 top-[26%] z-30 -translate-x-1/2 sm:top-[22%]"
       >
-        {/* Painel oficial — frame escuro com borda e backdrop blur */}
-        <motion.ul
-          initial="dim"
-          animate="lit"
-          variants={{
-            lit: {
-              transition: { staggerChildren: STAGGER, delayChildren: 0.4 },
-            },
-          }}
-          className="relative flex items-center gap-3 rounded-full border border-white/10 bg-racing-blue-deep/90 px-5 py-4 shadow-[0_24px_72px_-16px_oklch(0_0_0_/_0.7)] backdrop-blur-md sm:gap-4 sm:px-7 sm:py-5"
-        >
-          {Array.from({ length: LIGHT_COUNT }).map((_, idx) => (
-            <motion.li
-              key={idx}
-              variants={{
-                dim: {
-                  opacity: 0.14,
-                  scale: 0.82,
-                  boxShadow: "0 0 0 0 rgba(0,0,0,0)",
-                },
-                lit: {
-                  // Acende → segura → DROP a 0 simultaneamente em LIGHTS_OUT_AT.
-                  // Como o stagger é cumulativo e o `lit` dispara em
-                  // delayChildren=0.4 + idx*STAGGER, o "drop" precisa
-                  // ser configurado pra ocorrer no mesmo instante para
-                  // todas as luzes — usamos `times` ancorado no tempo
-                  // restante de cada luz até o ponto comum.
-                  opacity: [0, 1, 1, 0],
-                  scale: [0.82, 1.05, 1, 0.92],
-                  boxShadow: [
-                    "0 0 0 0 oklch(0.58 0.23 27 / 0)",
-                    "0 0 36px 10px oklch(0.58 0.23 27 / 0.95), inset 0 0 14px 3px oklch(0.86 0.18 95 / 0.5)",
-                    "0 0 28px 6px oklch(0.58 0.23 27 / 0.85), inset 0 0 10px 2px oklch(0.86 0.18 95 / 0.35)",
-                    "0 0 0 0 oklch(0.58 0.23 27 / 0)",
-                  ],
-                  transition: {
-                    // tempo total = duração do "lit" da luz mais nova
-                    // (que ainda precisa segurar o hold).
-                    // tempos: [acende, pico, hold-stable, drop]
-                    duration:
-                      LIGHTS_OUT_AT - (0.4 + idx * STAGGER) + 0.3,
-                    times: [
-                      0,
-                      LIGHT_LIT_DURATION /
-                        (LIGHTS_OUT_AT - (0.4 + idx * STAGGER) + 0.3),
-                      Math.min(
-                        0.95,
-                        (LIGHT_LIT_DURATION + 0.05) /
-                          (LIGHTS_OUT_AT - (0.4 + idx * STAGGER) + 0.3)
-                      ),
-                      Math.min(
-                        0.999,
-                        (LIGHTS_OUT_AT - (0.4 + idx * STAGGER)) /
-                          (LIGHTS_OUT_AT - (0.4 + idx * STAGGER) + 0.3)
-                      ),
-                    ],
-                    ease: "easeOut",
-                  },
-                },
-              }}
-              style={{ backgroundColor: "var(--racing-red)" }}
-              className="size-4 rounded-full sm:size-5 lg:size-6"
-            />
-          ))}
-
-          {/* Reflexo sutil no topo do painel — vidro */}
-          <span
+        {/* Wrapper que recebe o halo radial circular atrás do painel.
+            O halo é separado das luzes individuais (que tinham um
+            `box-shadow` enorme — blur 36 + spread 10 — vazando do painel
+            `rounded-full` em formato meio retangular pelo grid de 5
+            luzes alinhadas; box-shadow não respeita o `overflow:hidden`
+            do pai). Aqui o halo é UMA camada radial circular dedicada,
+            atrás de tudo, com intensidade subindo conforme as luzes
+            acendem. Resultado: glow orgânico arredondado, não retangular. */}
+        <div className="relative">
+          {/* Halo radial — camada negativa atrás do painel.
+              `rounded-full` + `blur-2xl` garantem o formato circular suave.
+              `mix-blend-screen` faz o vermelho clarear (não "pintar
+              vermelho") sobre a foto/overlay azul de fundo. */}
+          <motion.span
             aria-hidden
-            className="pointer-events-none absolute inset-x-6 top-1 h-1/3 rounded-full bg-gradient-to-b from-white/10 to-transparent"
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{
+              opacity: [0, 0, 0.55, 0.7, 0],
+              scale: [0.6, 0.7, 1.0, 1.15, 0.8],
+            }}
+            transition={{
+              duration: TOTAL,
+              times: [
+                0,
+                0.4 / TOTAL, // antes da 1a luz acender
+                (0.4 + STAGGER * 2) / TOTAL, // 3a luz acende, halo cresce
+                LIGHTS_OUT_AT / TOTAL, // todas acesas, halo no pico
+                (LIGHTS_OUT_AT + 0.15) / TOTAL, // dissolve com lights-out
+              ],
+              ease: "easeOut",
+            }}
+            className="pointer-events-none absolute left-1/2 top-1/2 -z-10 size-[260px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,oklch(0.58_0.23_27_/_0.7)_0%,oklch(0.58_0.23_27_/_0.35)_35%,transparent_70%)] blur-2xl sm:size-[320px] lg:size-[380px]"
+            style={{ mixBlendMode: "screen" }}
           />
-        </motion.ul>
+
+          {/* Painel oficial — frame escuro com borda e backdrop blur */}
+          <motion.ul
+            initial="dim"
+            animate="lit"
+            variants={{
+              lit: {
+                transition: { staggerChildren: STAGGER, delayChildren: 0.4 },
+              },
+            }}
+            className="relative flex items-center gap-3 rounded-full border border-white/10 bg-racing-blue-deep/90 px-5 py-4 shadow-[0_24px_72px_-16px_oklch(0_0_0_/_0.7)] backdrop-blur-md sm:gap-4 sm:px-7 sm:py-5"
+          >
+            {Array.from({ length: LIGHT_COUNT }).map((_, idx) => (
+              <motion.li
+                key={idx}
+                variants={{
+                  dim: {
+                    opacity: 0.14,
+                    scale: 0.82,
+                    boxShadow: "0 0 0 0 rgba(0,0,0,0)",
+                  },
+                  lit: {
+                    // Acende → segura → DROP a 0 simultaneamente em LIGHTS_OUT_AT.
+                    // Box-shadow contido (blur 16, sem spread) — o "halo
+                    // grande" agora vem da camada radial circular dedicada
+                    // acima, então a luz só precisa do glow imediato pra
+                    // parecer LED aceso.
+                    opacity: [0, 1, 1, 0],
+                    scale: [0.82, 1.05, 1, 0.92],
+                    boxShadow: [
+                      "0 0 0 0 oklch(0.58 0.23 27 / 0)",
+                      "0 0 16px 0 oklch(0.58 0.23 27 / 0.9), inset 0 0 12px 2px oklch(0.86 0.18 95 / 0.55)",
+                      "0 0 12px 0 oklch(0.58 0.23 27 / 0.8), inset 0 0 10px 2px oklch(0.86 0.18 95 / 0.4)",
+                      "0 0 0 0 oklch(0.58 0.23 27 / 0)",
+                    ],
+                    transition: {
+                      // tempo total = duração do "lit" da luz mais nova
+                      // (que ainda precisa segurar o hold).
+                      // tempos: [acende, pico, hold-stable, drop]
+                      duration:
+                        LIGHTS_OUT_AT - (0.4 + idx * STAGGER) + 0.3,
+                      times: [
+                        0,
+                        LIGHT_LIT_DURATION /
+                          (LIGHTS_OUT_AT - (0.4 + idx * STAGGER) + 0.3),
+                        Math.min(
+                          0.95,
+                          (LIGHT_LIT_DURATION + 0.05) /
+                            (LIGHTS_OUT_AT - (0.4 + idx * STAGGER) + 0.3)
+                        ),
+                        Math.min(
+                          0.999,
+                          (LIGHTS_OUT_AT - (0.4 + idx * STAGGER)) /
+                            (LIGHTS_OUT_AT - (0.4 + idx * STAGGER) + 0.3)
+                        ),
+                      ],
+                      ease: "easeOut",
+                    },
+                  },
+                }}
+                style={{ backgroundColor: "var(--racing-red)" }}
+                className="size-4 rounded-full sm:size-5 lg:size-6"
+              />
+            ))}
+
+            {/* Reflexo sutil no topo do painel — vidro */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-6 top-1 h-1/3 rounded-full bg-gradient-to-b from-white/10 to-transparent"
+            />
+          </motion.ul>
+        </div>
 
         {/* Subtítulo dinâmico — alterna "STAND BY" → "LIGHTS OUT" */}
         <div className="mt-3 flex items-center justify-center gap-3">
