@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
@@ -15,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Hilton76Logo } from "@/components/Hilton76Logo";
 import { WHATSAPP_HREF } from "@/lib/links";
+import { useCinematicEntrySkip } from "@/lib/use-cinematic-entry";
 
 const NAV_LINKS = [
   { href: "#sobre", label: "Sobre" },
@@ -27,6 +29,9 @@ const NAV_LINKS = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const reduceMotion = useReducedMotion();
+  const skipEntry = useCinematicEntrySkip();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 64);
@@ -35,11 +40,22 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Coordena com a sequência de largada do hero (`ignition-lights.tsx`):
+  // só na home, sem reduced-motion, sem bfcache, esperamos o "LIGHTS OUT"
+  // (3.1s) + 0.1s de respiro pra entrar junto com o kicker. Em qualquer
+  // outra rota futura ou em retorno via histórico/back-forward, navbar
+  // entra rápido (0.2s) — não pode parecer travado.
+  const isHome = pathname === "/";
+  const cinematicEntry = isHome && !reduceMotion && !skipEntry;
+  const headerTransition = cinematicEntry
+    ? { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const, delay: 3.2 }
+    : { duration: 0.4, ease: "easeOut" as const, delay: 0.2 };
+
   return (
     <motion.header
       initial={{ y: -32, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+      transition={headerTransition}
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-all duration-500",
         scrolled

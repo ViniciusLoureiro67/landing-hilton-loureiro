@@ -29,7 +29,9 @@ import { ScrollIndicator } from "./scroll-indicator";
  *   2.05s — luz 4 ……….. acende
  *   2.60s — luz 5 ……….. acende → todas vermelhas, painel "STAND BY"
  *   3.10s — LIGHTS OUT — todas apagam, flash branco + flash radial
- *   3.20s — kicker labels entram (junto com flash dissolvendo)
+ *   3.20s — kicker labels + NAVBAR entram (junto com flash dissolvendo;
+ *           o navbar fica oculto antes pra não competir com as luzes —
+ *           ver `src/components/Navbar.tsx` + `useCinematicEntrySkip`)
  *   3.30s — clip-path reveal do nome
  *   3.55s — 76 gigante anima entrada (scale 1.06 → 1)
  *   3.85s — tagline aparece
