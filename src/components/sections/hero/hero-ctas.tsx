@@ -190,7 +190,7 @@ export function HeroCtas() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        delay: skipAll ? 0 : 2.0,
+        delay: skipAll ? 0 : 4.05,
         duration: skipAll ? 0.01 : 0.55,
         ease: "easeOut",
       }}

@@ -21,7 +21,7 @@ export function HeroTagline() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        delay: skipAll ? 0 : 1.85,
+        delay: skipAll ? 0 : 3.85,
         duration: skipAll ? 0.01 : 0.55,
         ease: "easeOut",
       }}

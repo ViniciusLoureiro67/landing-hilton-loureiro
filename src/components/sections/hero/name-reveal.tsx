@@ -23,8 +23,10 @@ function buildMaskParent(skipEntry: boolean): Variants {
     hidden: {},
     show: {
       transition: {
-        staggerChildren: skipEntry ? 0 : 0.18,
-        delayChildren: skipEntry ? 0 : 1.3,
+        staggerChildren: skipEntry ? 0 : 0.22,
+        // Casa com `LIGHTS_OUT_AT + 0.2`: nome começa a varrer logo
+        // depois das luzes apagarem e o flash explodir.
+        delayChildren: skipEntry ? 0 : 3.3,
       },
     },
   };
