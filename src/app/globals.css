@@ -246,6 +246,114 @@
   .clip-diagonal-tl {
     clip-path: polygon(0 56px, 100% 0, 100% 100%, 0 100%);
   }
+
+  /* Hero — luzes da largada (semáforo F1). Usado como fallback caso o
+     stagger do Framer não consiga reproduzir o glow pulsante. */
+  @keyframes ignite-pulse {
+    0% {
+      transform: scale(0.85);
+      box-shadow: 0 0 0 0 currentColor;
+      opacity: 0.6;
+    }
+    50% {
+      transform: scale(1);
+      box-shadow: 0 0 32px 8px currentColor;
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 16px 2px currentColor;
+      opacity: 0.95;
+    }
+  }
+
+  /* CTA secundário — bounce sutil do ChevronDown. Fallback CSS quando
+     Framer não estiver disponível (SSR / reduced motion override). */
+  @keyframes chevron-bounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(4px);
+    }
+  }
+
+  /* Scroll indicator — pulso vertical sob a linha decorativa. */
+  @keyframes scroll-pulse {
+    0%,
+    100% {
+      transform: scaleY(0.3);
+      transform-origin: top center;
+    }
+    50% {
+      transform: scaleY(1);
+      transform-origin: top center;
+    }
+  }
+
+  /* Marquee horizontal infinito — usado no rodapé do hero (palmarés/marcas).
+     A faixa duplica o conteúdo e roda 50% do total para loop sem corte. */
+  @keyframes marquee-x {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  /* CTA primário — glow racing pulsante no hover (anel vermelho expandindo). */
+  @keyframes racing-glow-pulse {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 0 oklch(0.58 0.23 27 / 0.55),
+        0 8px 24px -8px oklch(0.58 0.23 27 / 0.6);
+    }
+    50% {
+      box-shadow:
+        0 0 0 12px oklch(0.58 0.23 27 / 0),
+        0 8px 32px -6px oklch(0.58 0.23 27 / 0.85);
+    }
+  }
+
+  /* Speedlines diagonais ambient — grade larga com leve drift horizontal. */
+  @keyframes speedlines-drift {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: 200px 0;
+    }
+  }
+
+  .hero-speedlines {
+    background-image: repeating-linear-gradient(
+      115deg,
+      transparent 0,
+      transparent 92px,
+      oklch(1 0 0 / 0.045) 92px,
+      oklch(1 0 0 / 0.045) 93px
+    );
+    animation: speedlines-drift 28s linear infinite;
+  }
+
+  /* Flash radial da largada — quando a luz verde acende, expande pelo hero
+     todo num pulso curto e dissolve. */
+  @keyframes ignition-flash {
+    0% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    35% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.6);
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mail, MessageCircle } from "lucide-react";
 import { Hilton76Logo } from "@/components/Hilton76Logo";
+import { EMAIL_HREF, INSTAGRAM_HREF, WHATSAPP_HREF } from "@/lib/links";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -20,11 +21,6 @@ function InstagramIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-
-const WHATSAPP_HREF =
-  "https://wa.me/5582996696666?text=Ol%C3%A1%20Hilton%2C%20vim%20pelo%20site%20oficial%20e%20gostaria%20de%20conversar.";
-const INSTAGRAM_HREF = "https://www.instagram.com/hilton_loureiro76/";
-const EMAIL_HREF = "mailto:hiltonloureiro@hotmail.com";
 
 export function Footer() {
   return (
