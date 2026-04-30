@@ -11,7 +11,7 @@ import { FlipCounter } from "@/components/motion/flip-counter";
  *   1. Cascata orquestrada via `staggerChildren` no parent
  *   2. Linha vermelha cresce de 0→100% acima de cada número (drawn line)
  *   3. FlipCounter conta de 0 → valor com flip 3D nos dígitos
- *   4. O último stat ("76") tem pulse infinito sutil — assinatura do piloto
+ *   4. O último stat ("76") mantém destaque estático — assinatura do piloto
  *   5. Cada item entra com clip-path mask reveal vertical
  *   6. Index "01–04" pequenino acima de cada label, em mono
  *
@@ -108,39 +108,16 @@ export function SobreStats() {
             className="mb-3 block h-[2px] w-full bg-racing-red"
           />
 
-          {/* Número — FlipCounter + pulse sutil no signature ("76") */}
-          <motion.span
-            animate={
-              reduce || !stat.signature || !inView
-                ? undefined
-                : {
-                    textShadow: [
-                      "0 0 0px rgba(217,57,71,0)",
-                      "0 0 24px rgba(217,57,71,0.5)",
-                      "0 0 0px rgba(217,57,71,0)",
-                    ],
-                  }
-            }
-            transition={
-              stat.signature
-                ? {
-                    duration: 2.6,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 2,
-                  }
-                : undefined
-            }
-            className={`font-display text-[clamp(3rem,7vw,5.5rem)] leading-[0.85] tracking-tight ${
-              stat.signature ? "text-racing-white" : "text-racing-white"
-            }`}
+          {/* Número — FlipCounter + destaque estático no signature ("76") */}
+          <span
+            className="font-display text-[clamp(3rem,7vw,5.5rem)] leading-[0.85] tracking-tight text-racing-white"
           >
             <FlipCounter
               value={stat.value}
               inView={inView}
               duration={stat.signature ? 1.9 : 1.5}
             />
-          </motion.span>
+          </span>
 
           {/* Label */}
           <span className="mt-3 font-mono text-[10px] font-medium uppercase tracking-[0.35em] text-racing-mute">
