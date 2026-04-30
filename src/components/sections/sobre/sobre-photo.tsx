@@ -1,34 +1,27 @@
 "use client";
 
-import {
-  motion,
-  useInView,
-  useMotionValue,
-  useScroll,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 /**
- * SobrePhoto — entrada cinematográfica multi-camada + interações ricas.
+ * SobrePhoto — entrada cinematográfica multi-camada.
  *
  * Stack de camadas (z-index ascendente):
- *   z-0   foto (sempre visível, parallax + scale no scroll)
+ *   z-0   foto (sempre visível, scale leve estático)
  *   z-10  vinheta inferior + borda lateral vermelha + caption
  *   z-20  3 stripes verticais que "abrem" a cortina (efeito flag racing)
  *   z-30  cortina vermelha que se retira por cima de tudo
- *   z-40  speed lines on hover
+ *   z-40  spotlight cinematográfico no hover
  *
  * Princípios:
  *   - CSS-first: a foto SEMPRE existe no DOM, nunca depende de JS.
- *   - Cortina + stripes são overlays decorativos sobrepostos. Se JS
- *     falhar, no pior caso eles ficam visíveis (não escondem a foto
- *     permanentemente — animação dispara via amount: 0.1).
- *   - Hover: tilt 3D suave (apenas pointer fino), reveal de speed lines.
- *   - Scroll-driven: parallax assimétrico + scale dramático.
+ *   - Stripes/cortina são desmontados após a entry pra liberar layers GPU.
+ *   - Hover: zoom leve sem filter (saturate é paint-expensive).
+ *   - Sem parallax scroll-driven aqui — a entrada já é dramática e o
+ *     custo de listener contínuo + recomposite de uma foto 4:5 grande
+ *     era pesado em Windows.
  *
  * Reduced-motion: tudo estático. Cortina e stripes nunca renderizam.
  */
@@ -36,56 +29,14 @@ export function SobrePhoto() {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.1 });
-
-  // Scroll-driven parallax + scale
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-  const yScroll = useTransform(scrollYProgress, [0, 1], ["10%", "-10%"]);
-  const scaleScroll = useTransform(
-    scrollYProgress,
-    [0, 0.5, 1],
-    [1.08, 1.14, 1.08]
-  );
-
-  // 3D tilt no mouse (desktop only)
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const tiltX = useSpring(useTransform(mouseY, [-0.5, 0.5], ["4deg", "-4deg"]), {
-    stiffness: 150,
-    damping: 20,
-  });
-  const tiltY = useSpring(useTransform(mouseX, [-0.5, 0.5], ["-4deg", "4deg"]), {
-    stiffness: 150,
-    damping: 20,
-  });
-
-  function onMouseMove(e: React.MouseEvent<HTMLElement>) {
-    if (reduce) return;
-    if (
-      typeof window !== "undefined" &&
-      !window.matchMedia("(pointer: fine)").matches
-    ) {
-      return;
-    }
-    const rect = e.currentTarget.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width - 0.5;
-    const py = (e.clientY - rect.top) / rect.height - 0.5;
-    mouseX.set(px);
-    mouseY.set(py);
-  }
-
-  function onMouseLeave() {
-    mouseX.set(0);
-    mouseY.set(0);
-  }
+  // Quando a entry termina, removemos stripes + cortina do DOM. Isso
+  // libera 4 layers GPU permanentes (3 stripes + cortina) que ficavam
+  // composited em ±101% / scaleY 0 mesmo sem repintar.
+  const [entryDone, setEntryDone] = useState(false);
 
   return (
     <motion.figure
       ref={ref}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
       initial={reduce ? { opacity: 1 } : { opacity: 0, scale: 0.96 }}
       animate={inView ? { opacity: 1, scale: 1 } : undefined}
       transition={
@@ -93,37 +44,21 @@ export function SobrePhoto() {
           ? { duration: 0.3 }
           : { duration: 1.1, ease: [0.16, 1, 0.3, 1] }
       }
-      style={{
-        perspective: 1200,
-        willChange: "transform, opacity",
-      }}
+      onAnimationComplete={() => setEntryDone(true)}
       className="group relative aspect-[4/5] w-full overflow-hidden rounded-sm bg-racing-asphalt lg:aspect-[3/4]"
     >
-      {/* Camada da foto — parallax + scale no scroll + tilt no hover */}
-      <motion.div
-        style={
-          reduce
-            ? undefined
-            : {
-                y: yScroll,
-                scale: scaleScroll,
-                rotateX: tiltX,
-                rotateY: tiltY,
-                transformStyle: "preserve-3d",
-                willChange: "transform",
-              }
-        }
-        className="absolute inset-0 z-0"
-      >
+      {/* Camada da foto — scale estático leve (sem listener de scroll) */}
+      <div className="absolute inset-0 z-0" style={reduce ? undefined : { transform: "scale(1.06)" }}>
         <Image
           src="/photos/07-grid-largada-frontal.jpg"
           alt="Hilton Loureiro de pé no grid de largada ao lado da Kawasaki ZX6R número 76, capacete azul com adesivo 76, traje vermelho, preto e branco, gesto de positivo com a mão"
           fill
-          sizes="(max-width: 1024px) 100vw, 42vw"
+          sizes="(max-width: 1024px) 100vw, (max-width: 1536px) 54vw, 820px"
+          quality={95}
           priority={false}
-          className="object-cover object-[center_28%]"
+          className="object-cover object-[center_28%] transition-transform duration-700 ease-out group-hover:scale-[1.015]"
         />
-      </motion.div>
+      </div>
 
       {/* Vinheta inferior — integra com bg + ancora caption */}
       <div
@@ -186,9 +121,8 @@ export function SobrePhoto() {
       </figcaption>
 
       {/* 3 stripes verticais — efeito "starting flag" se afastando.
-          Cada um tem 1/3 da largura e desliza pra cima ou pra baixo
-          alternadamente. Z-index acima da foto e da vinheta. */}
-      {!reduce && (
+          Desmontadas após a entry pra liberar GPU layers. */}
+      {!reduce && !entryDone && (
         <>
           {[0, 1, 2].map((i) => (
             <motion.div
@@ -204,7 +138,6 @@ export function SobrePhoto() {
               style={{
                 left: `${i * 33.34}%`,
                 width: "33.34%",
-                willChange: "transform",
               }}
               className="pointer-events-none absolute top-0 z-20 h-full bg-racing-blue-deep"
             />
@@ -213,8 +146,8 @@ export function SobrePhoto() {
       )}
 
       {/* Cortina vermelha — desliza de baixo pra cima por cima das
-          stripes. Fecha a entry com peso visual. */}
-      {!reduce && (
+          stripes. Desmontada após a entry. */}
+      {!reduce && !entryDone && (
         <motion.div
           aria-hidden
           initial={{ scaleY: 1 }}
@@ -224,16 +157,24 @@ export function SobrePhoto() {
             ease: [0.85, 0, 0.15, 1],
             delay: 0.55,
           }}
-          style={{ transformOrigin: "top center", willChange: "transform" }}
+          style={{ transformOrigin: "top center" }}
           className="pointer-events-none absolute inset-0 z-30 bg-racing-red"
         />
       )}
 
-      {/* Speed lines no hover (z=40 — acima de tudo) */}
-      <div
-        aria-hidden
-        className="racing-speed-lines pointer-events-none absolute inset-0 z-40 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-      />
+      {/* Spotlight no hover — radial gradient com transition de opacity. */}
+      {reduce ? null : (
+        <>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-40 bg-[radial-gradient(circle_at_50%_42%,oklch(0.68_0.18_252/0.16),transparent_44%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-40 opacity-0 ring-1 ring-inset ring-racing-blue-bright/15 transition-opacity duration-500 group-hover:opacity-100"
+          />
+        </>
+      )}
     </motion.figure>
   );
 }
