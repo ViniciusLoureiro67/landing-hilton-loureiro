@@ -1,35 +1,30 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Hook que retorna `Date.now()` no client após hidratação, e `0` no SSR.
  *
- * Usar `useSyncExternalStore` é o padrão idiomático em React 19+ pra
- * sincronizar com fontes externas (como o relógio do sistema) sem cair
- * no anti-pattern de `setState` dentro de `useEffect`. Também garante
- * que SSR e hidratação inicial concordem (`getServerSnapshot` → `0`),
- * e o client recebe o valor real após o primeiro commit.
+ * Estratégia: `useState(0)` na render inicial (server e client primeiro
+ * passe concordam → zero hydration mismatch), e `useEffect` empurra o
+ * timestamp real após o commit. Não atualiza periodicamente — só
+ * precisamos saber se o usuário está antes/depois de cada etapa, e o
+ * relógio não muda relevantemente enquanto rola a página.
  *
- * Não emite atualizações periódicas: só queremos saber se já passou ou
- * não da data de cada etapa, e o usuário não fica horas na seção.
+ * Sobre o lint: `react-hooks/set-state-in-effect` é genericamente correto
+ * (evitar cascading renders), mas para "detectar mount client-side" essa
+ * É a forma idiomática. Tentamos `useSyncExternalStore` antes; em prod
+ * minificado o microtask de notificação não estava trocando do server
+ * snapshot pro client snapshot de forma confiável. Voltamos pro padrão
+ * comprovado e desativamos a regra apenas neste ponto.
  */
 export function useTemporadaNow(): number {
-  return useSyncExternalStore(
-    subscribe,
-    getClientSnapshot,
-    getServerSnapshot
-  );
-}
+  const [now, setNow] = useState(0);
 
-function subscribe(): () => void {
-  return () => {};
-}
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNow(Date.now());
+  }, []);
 
-function getClientSnapshot(): number {
-  return Date.now();
-}
-
-function getServerSnapshot(): number {
-  return 0;
+  return now;
 }
