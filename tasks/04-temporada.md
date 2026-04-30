@@ -58,10 +58,10 @@ Sprint 4 do brief (`tasks/00-brief.md` §5 e §8). S1–S3 entregues e mergeados
 
 ### Premissas ⚠️
 
-- ⚠️ Calendário fornecido pelo cliente **em 29/04/2026** com 8 etapas; etapa 3 (05/07) tem **circuito a definir** — exibir como "A definir" e marcar visualmente
+- ✅ Calendário fornecido pelo cliente **em 29/04/2026** com 8 etapas. Atualização posterior (mesmo dia) confirmou a etapa 3 (05/07) em **Curvelo (MG)**, então não há mais TBD ativa.
+- ℹ️ O type `StageStatus` mantém o variant `tbd` e o card sabe renderizar "A definir", para qualquer alteração futura no calendário (entra naturalmente sem refactor).
 - ⚠️ Datas tratadas como `YYYY-MM-DD` em UTC (sem horário) — comparação com `Date.now()` usa timezone do browser, suficiente para o nível "passou × não passou"
-- ⚠️ Coordenadas das cidades de circuito (Interlagos, Goiânia, Cascavel, Santa Cruz do Sul, Cuiabá) são aproximações geográficas — não é mapa de pista, é mapa nacional
-- ⚠️ Etapa "a definir" recebe pino opcional ao centro do país com indicação de incerteza, ou vai apenas pra lista (decisão tomada na Fase 3.4)
+- ⚠️ Coordenadas das cidades-sede (Interlagos, Goiânia, Cascavel, Santa Cruz do Sul, Cuiabá, Curvelo) são aproximações geográficas — não é mapa de pista, é mapa nacional
 
 ### Bloqueadores / perguntas ao usuário
 
@@ -133,11 +133,13 @@ Cada etapa é um card compacto:
 - Estado `upcoming`: hover com slash diagonal vermelho (decoração de canto)
 - Card com `data-stage-id={id}` para sincronizar com mapa
 
-### 3.4 Etapa "a definir" (05/07)
+### 3.4 Etapa "a definir" (variant `tbd`)
 
-- Aparece **na lista** normalmente como round 3 com circuito "A definir" em itálico + nota visual
-- **Sem pino no mapa** (não temos coordenadas). Pino é exibido como **placeholder fora do mapa**, em uma legenda lateral pequena: "Etapa 3 — circuito a definir"
-- Decisão: melhor declarar a ausência do que mentir uma posição
+- Atualmente **nenhuma etapa** está em status `tbd` — a etapa 3 foi confirmada em Curvelo (MG) na atualização do cliente
+- O variant `tbd` continua suportado no código:
+  - **Não renderiza pino no mapa** (sem `lat/lon`)
+  - **Aparece na lista** com badge amarelo "A definir" + circuito em itálico
+  - Quando o cliente confirmar uma futura mudança, basta editar `temporada-data.ts` (lat/lon + city/state/circuit)
 
 ### 3.5 Counter "etapas restantes"
 
@@ -267,7 +269,7 @@ type StageWithStatus = Stage & {
 |-------|------|----------|--------|----|----|----|
 | 1 | 12/04 | Autódromo José Carlos Pace (Interlagos) | São Paulo | SP | -23.7014 | -46.6969 |
 | 2 | 24/05 | Autódromo Internacional de Goiânia | Goiânia | GO | -16.7016 | -49.2532 |
-| 3 | 05/07 | A definir | A definir | — | null | null |
+| 3 | 05/07 | Autódromo Internacional de Curvelo | Curvelo | MG | -18.7569 | -44.4314 |
 | 4 | 02/08 | Autódromo de Cascavel | Cascavel | PR | -24.9555 | -53.4552 |
 | 5 | 22/08 | Autódromo José Carlos Pace (Interlagos) | São Paulo | SP | -23.7014 | -46.6969 |
 | 6 | 27/09 | Autódromo Internacional de Santa Cruz do Sul | Santa Cruz do Sul | RS | -29.7178 | -52.4258 |
@@ -277,6 +279,7 @@ type StageWithStatus = Stage & {
 **Clusters automáticos:**
 - Interlagos = round 1 + round 5 (cluster ×2)
 - Goiânia = round 2 + round 8 (cluster ×2)
+- Curvelo, Cascavel, Santa Cruz do Sul, Cuiabá = pinos individuais
 
 ### 5.4 Projeção lat/lon → SVG
 
