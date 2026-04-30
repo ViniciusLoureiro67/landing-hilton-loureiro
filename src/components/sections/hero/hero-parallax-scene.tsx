@@ -1,27 +1,14 @@
 "use client";
 
-import { useEffect, useRef, type RefObject } from "react";
 import { getImageProps } from "next/image";
-import {
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-  useTransform,
-  type MotionValue,
-} from "framer-motion";
+import { motion, useTransform } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { useHeroEntrySkip } from "./use-hero-entry-skip";
 import { useHeroScrollProgress } from "./hero-scroll-context";
 
 /**
- * Camadas de fundo do hero com parallax de mouse — o usuário move o
- * cursor e cada camada (foto, 76 gigante, speedlines) se desloca em
- * magnitudes diferentes, criando profundidade.
- *
- * Magnitudes (px máximos a partir do centro):
- *   - speedlines:  4
- *   - foto:        16
- *   - 76 gigante:  32  (camada mais "à frente" → mais reativa)
+ * Camadas de fundo do hero com parallax de scroll — foto, 76 gigante
+ * e speedlines se deslocam em magnitudes diferentes sem listener de mouse.
  *
  * O componente também renderiza:
  *   - dois `<Image>` (portrait mobile / wide desktop) com `priority` para LCP
@@ -34,98 +21,22 @@ import { useHeroScrollProgress } from "./hero-scroll-context";
  * Nota LCP: `next/image` em client component continua emitindo o
  * `<link rel="preload">` no head com `priority`. SSR markup sai inteiro.
  *
- * Sob `prefers-reduced-motion`: parallax desativado (motion values
- * ficam em zero) e o 76 não tem entrada animada — aparece estático.
+ * Sob `prefers-reduced-motion`: parallax desativado e o 76 não tem
+ * entrada animada — aparece estático.
  */
-
-const SPEEDLINES_STRENGTH = 4;
-const PHOTO_STRENGTH = 16;
-const NUMBER_STRENGTH = 32;
-
-function useMouseParallax(rootRef: RefObject<HTMLElement | null>) {
-  const reduceMotion = useReducedMotion();
-  const x = useMotionValue(0); // -1..1
-  const y = useMotionValue(0); // -1..1
-
-  // springs suavizam — evita jitter de mouse rápido
-  const springConfig = { stiffness: 90, damping: 20, mass: 0.5 };
-  const sx = useSpring(x, springConfig);
-  const sy = useSpring(y, springConfig);
-
-  useEffect(() => {
-    if (reduceMotion) return;
-    const target = rootRef.current;
-    if (!target) return;
-
-    function onMove(event: MouseEvent) {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      // -1 (esquerda/topo) a +1 (direita/base)
-      x.set((event.clientX - w / 2) / (w / 2));
-      y.set((event.clientY - h / 2) / (h / 2));
-    }
-
-    // IntersectionObserver gate: só registra `mousemove` enquanto o
-    // hero está intersectando o viewport. Quando o usuário rola para
-    // outras seções, o listener é removido e os springs ficam idle.
-    let listenerAttached = false;
-    function attach() {
-      if (listenerAttached) return;
-      window.addEventListener("mousemove", onMove, { passive: true });
-      listenerAttached = true;
-    }
-    function detach() {
-      if (!listenerAttached) return;
-      window.removeEventListener("mousemove", onMove);
-      listenerAttached = false;
-      // Voltar para o centro quando o hero sai de vista — evita
-      // "snap" quando o usuário rola de volta.
-      x.set(0);
-      y.set(0);
-    }
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) attach();
-          else detach();
-        }
-      },
-      { rootMargin: "0px", threshold: 0 }
-    );
-    io.observe(target);
-
-    return () => {
-      io.disconnect();
-      detach();
-    };
-  }, [reduceMotion, rootRef, x, y]);
-
-  return { sx, sy, reduceMotion };
-}
-
-function useParallaxOffset(
-  mvX: MotionValue<number>,
-  mvY: MotionValue<number>,
-  strength: number
-) {
-  const tx = useTransform(mvX, [-1, 1], [-strength, strength]);
-  const ty = useTransform(mvY, [-1, 1], [-strength, strength]);
-  return { tx, ty };
-}
 
 /**
  * Foto responsiva via `<picture>` + `<source media>`. O browser escolhe
  * UMA srcset com base na media query antes do download — sem duplo
  * preload, sem `sizes="0px"`. Cada srcset ainda passa pelo otimizador
- * de imagem do Next (formatos AVIF/WebP, quality 75).
+ * de imagem do Next (formatos AVIF/WebP, quality 95).
  */
 function ResponsiveHeroPhoto() {
   const common = {
     alt: "",
     fill: true as const,
     priority: true,
-    quality: 75,
+    quality: 95,
     sizes: "100vw",
   };
 
@@ -135,7 +46,7 @@ function ResponsiveHeroPhoto() {
   });
   const wide = getImageProps({
     ...common,
-    src: "/photos/02-corner-sonic-wide.jpg",
+    src: "/photos/06-curb-brasil-flag.jpg",
   });
 
   return (
@@ -158,49 +69,19 @@ function ResponsiveHeroPhoto() {
 }
 
 export function HeroParallaxScene() {
-  // Ref para a `<section id="top">` pai — usado pelo IntersectionObserver
-  // do parallax para gateá-lo só quando o hero está visível.
-  const sectionRef = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    sectionRef.current = document.getElementById("top");
-  }, []);
-
-  const { sx, sy, reduceMotion } = useMouseParallax(sectionRef);
+  const reduceMotion = useReducedMotion();
   const skipEntry = useHeroEntrySkip();
   const skipAll = reduceMotion || skipEntry;
-  const photo = useParallaxOffset(sx, sy, PHOTO_STRENGTH);
-  const number = useParallaxOffset(sx, sy, NUMBER_STRENGTH);
-  const lines = useParallaxOffset(sx, sy, SPEEDLINES_STRENGTH);
-  const numberRef = useRef<HTMLDivElement>(null);
 
   // Scroll-driven: enquanto o usuário rola o hero pra fora, o "76"
-  // sobe mais rápido que a foto (parallax invertido) e ganha um leve
-  // upscale + fade — sai com peso, não some.
+  // sobe mais rápido que a foto (parallax invertido) e fade — sai com
+  // peso, não some. Sem scale (re-rasterização cara em texto gigante).
   const scrollProgress = useHeroScrollProgress();
   const numberScrollY = useTransform(scrollProgress, [0, 1], [0, -160]);
-  const numberScrollScale = useTransform(scrollProgress, [0, 1], [1, 1.08]);
   const numberScrollOpacity = useTransform(scrollProgress, [0, 0.55, 0.9], [1, 0.7, 0]);
-  // Foto sobe mais lento que o restante — parallax clássico.
+  // Foto sobe mais lento que o restante — parallax clássico (sem scale
+  // pra poupar repaint da camada da foto em scroll).
   const photoScrollY = useTransform(scrollProgress, [0, 1], [0, -90]);
-  const photoScrollScale = useTransform(scrollProgress, [0, 1], [1.06, 1.12]);
-  // Speedlines aceleram/se inclinam levemente conforme rola.
-  const linesScrollY = useTransform(scrollProgress, [0, 1], [0, -32]);
-
-  // Combinações mouse-parallax + scroll-driven. Mantemos os hooks
-  // **fora** de ternários no JSX (regras dos hooks: nº de chamadas
-  // por render precisa ser estável, mesmo se reduceMotion alterna).
-  const photoY = useTransform(
-    [photo.ty, photoScrollY] as MotionValue<number>[],
-    ([a, b]: number[]) => a + b
-  );
-  const linesY = useTransform(
-    [lines.ty, linesScrollY] as MotionValue<number>[],
-    ([a, b]: number[]) => a + b
-  );
-  const numberY = useTransform(
-    [number.ty, numberScrollY] as MotionValue<number>[],
-    ([a, b]: number[]) => a + b
-  );
 
   return (
     <>
@@ -208,14 +89,14 @@ export function HeroParallaxScene() {
           `<picture>` com `<source media>` resolve responsividade num único
           `<img>` no DOM: o browser escolhe a srcset correta antes de
           baixar. Evita o trick `sizes="0px"` e o duplo preload. Cada
-          srcset ainda passa pelo otimizador do next/image (AVIF/WebP).
+          srcset ainda passa pelo otimizador do next/image em quality 95.
           Scroll-driven: parallax leve e zoom progressivo. */}
       <motion.div
         aria-hidden
         style={
           reduceMotion
-            ? undefined
-            : { x: photo.tx, y: photoY, scale: photoScrollScale }
+            ? { scale: 1.06 }
+            : { y: photoScrollY, scale: 1.06 }
         }
         className="absolute inset-0 -z-30 will-change-transform"
       >
@@ -225,7 +106,7 @@ export function HeroParallaxScene() {
       {/* Camada 2 — overlays de gradient (não param-laxam, ficam fixos) */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-20 bg-gradient-to-t from-racing-blue-deep via-racing-blue-deep/85 to-racing-blue-deep/30"
+        className="absolute inset-0 -z-20 bg-gradient-to-t from-racing-blue-deep via-racing-blue-deep/78 to-racing-blue-deep/22"
       />
       <div
         aria-hidden
@@ -237,11 +118,10 @@ export function HeroParallaxScene() {
         className="absolute inset-y-0 right-0 -z-20 hidden w-1/2 bg-gradient-to-l from-racing-blue-deep/60 via-transparent to-transparent sm:block"
       />
 
-      {/* Camada 3 — speedlines diagonais ambient. Scroll: leve translate-y
-          extra que somado ao parallax do mouse acelera ao rolar. */}
-      <motion.div
+      {/* Camada 3 — speedlines diagonais ambient (estáticas, sem
+          parallax — eram repaint contínuo do gradient repetido). */}
+      <div
         aria-hidden
-        style={reduceMotion ? undefined : { x: lines.tx, y: linesY }}
         className="hero-speedlines pointer-events-none absolute inset-0 -z-10 opacity-80"
       />
 
@@ -251,20 +131,16 @@ export function HeroParallaxScene() {
 
           Estrutura em 2 camadas pra evitar conflito entre `initial/animate`
           (entry) e `style` com motion values (scroll-driven):
-            - outer: posição (x do mouse + y combinado) + scale/opacity
-                     do scroll. Persistente.
+            - outer: posição + scale/opacity do scroll. Persistente.
             - inner: entry one-shot (opacity 0→1, scale 1.06→1) que
                      dispara após o flash da largada (delay 3.55s). */}
       <motion.div
-        ref={numberRef}
         aria-hidden
         style={
           reduceMotion
             ? undefined
             : {
-                x: number.tx,
-                y: numberY,
-                scale: numberScrollScale,
+                y: numberScrollY,
                 opacity: numberScrollOpacity,
               }
         }
@@ -280,9 +156,9 @@ export function HeroParallaxScene() {
               : { delay: 3.55, duration: 1.1, ease: [0.16, 1, 0.3, 1] }
           }
         >
-          {/* 7 — outline em azul-bright forte, com slash vermelho diagonal
-              atravessando (assinatura do logo HILTON76). Stroke grosso e
-              opacity alta para competir com a foto/overlay. */}
+          {/* 7 — outline em azul-bright forte. Stroke grosso compete com
+              a foto/overlay sem text-shadow (era paint extremamente caro
+              em texto desse tamanho). */}
           <span
             aria-hidden
             className="font-display leading-[0.78] tracking-[-0.04em]"
@@ -290,31 +166,18 @@ export function HeroParallaxScene() {
               fontSize: "clamp(22rem, 48vw, 56rem)",
               color: "transparent",
               WebkitTextStroke: "5px oklch(0.62 0.20 252 / 0.85)",
-              filter:
-                "drop-shadow(0 0 32px oklch(0.62 0.20 252 / 0.35))",
             }}
           >
             7
           </span>
-          {/* Slash diagonal vermelho — atravessa o "7", elemento gráfico
-              dominante. Posição percentual relativa ao bbox do "7". */}
-          <span
-            aria-hidden
-            className="absolute left-[42%] top-[2%] h-[96%] w-[14px] origin-center rotate-[18deg] bg-racing-red sm:w-[20px] lg:w-[28px]"
-            style={{
-              boxShadow:
-                "0 0 28px 4px oklch(0.58 0.23 27 / 0.55), 0 0 64px 12px oklch(0.58 0.23 27 / 0.25)",
-            }}
-          />
-          {/* 6 — sólido em vermelho (acento dominante). Drop-shadow para
-              destacar do overlay. */}
+          {/* 6 — sólido em vermelho (acento dominante). Sem drop-shadow
+              (era paint pesado em texto desse tamanho); o overlay já
+              segura contraste. */}
           <span
             aria-hidden
             className="font-display leading-[0.78] tracking-[-0.04em] text-racing-red"
             style={{
               fontSize: "clamp(22rem, 48vw, 56rem)",
-              filter:
-                "drop-shadow(0 12px 48px oklch(0 0 0 / 0.45))",
             }}
           >
             6
@@ -322,7 +185,7 @@ export function HeroParallaxScene() {
         </motion.span>
       </motion.div>
 
-      {/* Camada 5 — grain de filme sobre tudo, mix-blend overlay */}
+      {/* Camada 5 — grain de filme sobre tudo, com opacidade baixa. */}
       <div aria-hidden className="racing-grain pointer-events-none absolute inset-0" />
     </>
   );

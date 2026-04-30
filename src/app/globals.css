@@ -224,8 +224,7 @@
     position: absolute;
     inset: 0;
     background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-    mix-blend-mode: overlay;
-    opacity: 0.5;
+    opacity: 0.18;
     pointer-events: none;
     z-index: 1;
   }
@@ -318,7 +317,7 @@
     }
   }
 
-  /* Speedlines diagonais ambient — grade larga com leve drift horizontal. */
+  /* Speedlines diagonais ambient — estáticas para evitar repaint contínuo. */
   @keyframes speedlines-drift {
     from {
       background-position: 0 0;
@@ -333,10 +332,26 @@
       115deg,
       transparent 0,
       transparent 92px,
-      oklch(1 0 0 / 0.045) 92px,
-      oklch(1 0 0 / 0.045) 93px
+      oklch(1 0 0 / 0.03) 92px,
+      oklch(1 0 0 / 0.03) 93px
     );
-    animation: speedlines-drift 28s linear infinite;
+  }
+
+  /* Mapa Temporada — pulso do pino "próxima etapa". Anel cresce e desaparece
+     em ~1.8s, sinalizando "esta é a próxima". Desliga em reduced-motion. */
+  @keyframes pin-pulse {
+    0% {
+      transform: scale(0.6);
+      opacity: 0.85;
+    }
+    70% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
   }
 
   /* Flash radial da largada — quando a luz verde acende, expande pelo hero
@@ -356,13 +371,6 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
+/* Decisão do cliente: a landing IGNORA `prefers-reduced-motion` do SO.
+   Animações tocam para todos os usuários — ver
+   `src/lib/use-reduced-motion-safe.ts` para detalhes do trade-off. */

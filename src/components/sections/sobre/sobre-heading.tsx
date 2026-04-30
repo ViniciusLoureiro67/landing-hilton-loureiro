@@ -3,25 +3,20 @@
 import {
   motion,
   useInView,
-  useReducedMotion,
-  useScroll,
-  useTransform,
 } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { useRef } from "react";
 import { CharReveal } from "@/components/motion/char-reveal";
 
 /**
  * SobreHeading — heading "SOBRE" com:
  *
- *   1. "01" gigante de fundo (z=0) com parallax X driven by scroll
+ *   1. "01" gigante de fundo (z=0), estático e leve
  *   2. Kicker editorial slide-in lateral
  *   3. Heading "SOBRE" char-by-char clip-path mask reveal
  *   4. Slash vermelho cresce horizontal em sequência
  *   5. Subtítulo entra com fade + slight rise
  *   6. Linha decorativa horizontal abaixo, desenhando 0→100%
- *
- * Scroll-driven: o "01" gigante de fundo translata X pra criar
- * sensação de profundidade quando o usuário rola.
  *
  * Reduced-motion: tudo estático, sem char reveal.
  */
@@ -30,34 +25,13 @@ export function SobreHeading() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.3 });
 
-  // Parallax do "01" gigante de fundo
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-  const bgX = useTransform(scrollYProgress, [0, 1], ["0%", "-25%"]);
-  const bgOpacity = useTransform(
-    scrollYProgress,
-    [0, 0.4, 0.8, 1],
-    [0.04, 0.08, 0.06, 0.02]
-  );
-
   return (
     <div ref={ref} className="relative isolate">
       {/* "01" gigantesco de fundo — parallax horizontal no scroll */}
       <motion.span
         aria-hidden
-        style={
-          reduce
-            ? { fontSize: "clamp(14rem, 25vw, 28rem)" }
-            : {
-                fontSize: "clamp(14rem, 25vw, 28rem)",
-                x: bgX,
-                opacity: bgOpacity,
-                willChange: "transform, opacity",
-              }
-        }
-        className="pointer-events-none absolute -left-4 -top-12 z-0 select-none font-display leading-[0.78] tracking-[-0.04em] text-racing-white/[0.04] lg:-top-16"
+        style={{ fontSize: "clamp(14rem, 25vw, 28rem)" }}
+        className="pointer-events-none absolute -left-4 -top-12 z-0 select-none font-display leading-[0.78] tracking-[-0.04em] text-racing-white/[0.055] lg:-top-16"
       >
         01
       </motion.span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 
 /**
  * SobreMarquee — marquee VERTICAL infinito com texto editorial racing.
@@ -13,7 +13,7 @@ import { motion, useReducedMotion } from "framer-motion";
  * Implementação:
  *   - Wrapper com `overflow-hidden` e altura/largura controlada
  *   - Conteúdo duplicado pra criar loop seamless
- *   - `motion.div` anima `y` ou `x` infinito
+ *   - CSS animation no eixo horizontal para evitar RAF do Framer
  *
  * Reduced-motion: vira lista estática vertical sem animação.
  */
@@ -66,14 +66,7 @@ export function SobreMarquee({
         aria-hidden
         className={`pointer-events-none relative flex h-full overflow-hidden ${className}`}
       >
-        <motion.div
-          animate={{ y: ["0%", "-50%"] }}
-          transition={{
-            duration: 24,
-            ease: "linear",
-            repeat: Infinity,
-          }}
-          style={{ willChange: "transform" }}
+        <div
           className="flex flex-col items-center gap-8 font-mono text-xs uppercase tracking-[0.5em] text-racing-mute/40"
         >
           {items.map((token, i) => (
@@ -82,7 +75,7 @@ export function SobreMarquee({
               <span className="text-racing-red">{SEPARATOR}</span>
             </span>
           ))}
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -93,15 +86,8 @@ export function SobreMarquee({
       aria-hidden
       className={`pointer-events-none relative flex w-full overflow-hidden ${className}`}
     >
-      <motion.div
-        animate={{ x: ["0%", "-50%"] }}
-        transition={{
-          duration: 28,
-          ease: "linear",
-          repeat: Infinity,
-        }}
-        style={{ willChange: "transform" }}
-        className="flex shrink-0 items-center gap-8 whitespace-nowrap font-mono text-xs uppercase tracking-[0.5em] text-racing-mute/40"
+      <div
+        className="flex shrink-0 items-center gap-8 whitespace-nowrap font-mono text-xs uppercase tracking-[0.5em] text-racing-mute/40 [animation:marquee-x_44s_linear_infinite]"
       >
         {items.map((token, i) => (
           <span key={i} className="flex items-center gap-8">
@@ -109,7 +95,7 @@ export function SobreMarquee({
             <span className="text-racing-red">{SEPARATOR}</span>
           </span>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }

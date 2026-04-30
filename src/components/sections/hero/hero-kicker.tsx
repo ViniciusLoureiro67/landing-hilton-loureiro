@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion, useTransform } from "framer-motion";
+import { motion, useTransform } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { useHeroEntrySkip } from "./use-hero-entry-skip";
 import { useHeroScrollProgress } from "./hero-scroll-context";
 
@@ -61,7 +62,7 @@ export function HeroKicker() {
             className={
               reduceMotion
                 ? "absolute inset-0 rounded-full bg-racing-red"
-                : "absolute inset-0 animate-ping rounded-full bg-racing-red opacity-70"
+                : "absolute inset-0 rounded-full bg-racing-red/40"
             }
           />
           <span aria-hidden className="relative inline-block size-2 rounded-full bg-racing-red" />

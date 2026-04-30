@@ -3,14 +3,12 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 
+/**
+ * Lenis (smooth scroll) sempre ativo, independente do `prefers-reduced-motion`
+ * do SO. Ver decisão e trade-off de a11y em `src/lib/use-reduced-motion-safe.ts`.
+ */
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    if (prefersReducedMotion) return;
-
     const lenis = new Lenis({
       duration: 1.15,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),

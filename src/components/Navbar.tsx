@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
@@ -34,10 +35,29 @@ export function Navbar() {
   const skipEntry = useCinematicEntrySkip();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 64);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const sentinel = document.createElement("div");
+    sentinel.setAttribute("aria-hidden", "true");
+    sentinel.style.cssText =
+      "position:absolute;top:64px;left:0;width:1px;height:1px;pointer-events:none;";
+    document.body.prepend(sentinel);
+
+    const syncScrolled = (nextScrolled: boolean) =>
+      setScrolled((current) =>
+        current === nextScrolled ? current : nextScrolled
+      );
+
+    syncScrolled(globalThis.scrollY > 64);
+
+    const observer = new IntersectionObserver(
+      ([entry]) => syncScrolled(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+      sentinel.remove();
+    };
   }, []);
 
   // Coordena com a sequência de largada do hero (`ignition-lights.tsx`):
@@ -62,14 +82,14 @@ export function Navbar() {
       animate={{ y: 0, opacity: 1 }}
       transition={headerTransition}
       // `transition-colors` (não `transition-all`) — restringimos ao
-      // grupo de cor/borda/backdrop pra **NÃO** brigar com o framer-motion
+      // grupo de cor/borda pra **NÃO** brigar com o framer-motion
       // que controla opacity+transform via JS. Quando `transition-all`
       // estava aqui, o CSS interpolava por cima do JS e a entrada do
       // navbar parecia travar pela metade antes de completar.
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-[background-color,backdrop-filter,border-color] duration-500 ease-out",
+        "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color] duration-300 ease-out",
         scrolled
-          ? "bg-racing-blue-deep/75 backdrop-blur-xl border-b border-white/5"
+          ? "bg-racing-blue-deep/92 border-b border-white/5"
           : "bg-transparent"
       )}
     >
