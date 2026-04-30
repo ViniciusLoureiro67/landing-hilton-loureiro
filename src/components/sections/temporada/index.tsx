@@ -19,7 +19,7 @@ export function Temporada() {
     <section
       id="temporada"
       aria-labelledby="temporada-heading"
-      className="relative isolate overflow-hidden bg-racing-blue-deep"
+      className="relative isolate overflow-x-clip bg-racing-blue-deep"
     >
       {/* "76" gigante de fundo, posição assimétrica fora do grid */}
       <span
