@@ -77,33 +77,25 @@ export function NameReveal() {
         <span className="sr-only">Hilton Loureiro</span>
 
         {/* Linha 1 — HILTON, outline grosso. Clip-path corre dentro do
-            `overflow-hidden`. drop-shadow forte para destacar sobre a foto. */}
+            `overflow-hidden`. */}
         <span aria-hidden className="block overflow-hidden pb-1">
           <motion.span
             variants={line}
             className="block text-[3.75rem] sm:text-[5rem] lg:text-[7.5rem] xl:text-[9.5rem]"
             style={{
-              WebkitTextStroke: reduceMotion ? "0" : "2.5px oklch(0.97 0 0)",
-              color: reduceMotion ? "var(--racing-white)" : "transparent",
-              filter: reduceMotion
-                ? "none"
-                : "drop-shadow(0 6px 24px oklch(0 0 0 / 0.55))",
+              WebkitTextStroke: "2.5px oklch(0.97 0 0)",
+              color: "transparent",
             }}
           >
             Hilton
           </motion.span>
         </span>
 
-        {/* Linha 2 — LOUREIRO, sólido com drop-shadow para legibilidade. */}
+        {/* Linha 2 — LOUREIRO, sólido com sombra leve para legibilidade. */}
         <span aria-hidden className="block overflow-hidden pb-1">
           <motion.span
             variants={line}
             className="block text-[3.75rem] text-racing-white sm:text-[5rem] lg:text-[7.5rem] xl:text-[9.5rem]"
-            style={{
-              filter: reduceMotion
-                ? "none"
-                : "drop-shadow(0 6px 24px oklch(0 0 0 / 0.55))",
-            }}
           >
             Loureiro
           </motion.span>
@@ -119,20 +111,22 @@ export function NameReveal() {
           ANTES da sequência de ignição (em ~0.3s). Agora controla o
           timing absoluto (`UNDERLINE_DELAY`), garantindo que entra DEPOIS
           do reveal completo do nome. */}
-      {!reduceMotion && (
-        <motion.span
-          aria-hidden
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{
-            delay: skipEntry ? 0 : UNDERLINE_DELAY,
-            duration: 0.7,
-            ease: [0.16, 1, 0.3, 1],
-          }}
-          style={{ originX: 0 }}
-          className="mt-3 block h-[3px] w-32 bg-racing-red sm:mt-4 sm:w-44 lg:w-56"
-        />
-      )}
+      <motion.span
+        aria-hidden
+        initial={{ scaleX: reduceMotion ? 1 : 0 }}
+        animate={{ scaleX: 1 }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : {
+                delay: skipEntry ? 0 : UNDERLINE_DELAY,
+                duration: 0.7,
+                ease: [0.16, 1, 0.3, 1],
+              }
+        }
+        style={{ originX: 0 }}
+        className="mt-3 block h-[3px] w-32 bg-racing-red shadow-[0_0_18px_oklch(0.58_0.23_27_/_0.35)] sm:mt-4 sm:w-44 lg:w-56"
+      />
     </>
   );
 }
