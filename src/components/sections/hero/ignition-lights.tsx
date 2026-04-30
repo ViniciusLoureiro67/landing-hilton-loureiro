@@ -30,6 +30,7 @@ import { useHeroEntrySkip } from "./use-hero-entry-skip";
  */
 
 const LIGHT_COUNT = 5;
+const LIGHT_KEYS = ["one", "two", "three", "four", "five"] as const;
 
 const STAGGER = 0.55;
 const LIGHT_LIT_DURATION = 0.18;
@@ -37,33 +38,61 @@ const LIGHTS_OUT_AT = 0.4 + STAGGER * (LIGHT_COUNT - 1) + 0.5; // 3.10
 const FLASH_END = LIGHTS_OUT_AT + 0.4; // 3.50
 const TOTAL = FLASH_END + 0.05; // 3.55s — buffer mínimo pra não cortar o flash
 
+function ReducedIgnitionSignature() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute left-1/2 top-[26%] z-30 -translate-x-1/2 sm:top-[22%]"
+    >
+      <div className="relative flex items-center gap-3 rounded-full border border-white/10 bg-racing-blue-deep/96 px-5 py-4 shadow-[0_18px_48px_-24px_oklch(0_0_0_/_0.75)] sm:gap-4 sm:px-7 sm:py-5">
+        {LIGHT_KEYS.map((key) => (
+          <span
+            key={key}
+            className="size-4 rounded-full bg-racing-red shadow-[0_0_16px_0_oklch(0.58_0.23_27_/_0.55)] sm:size-5 lg:size-6"
+          />
+        ))}
+        <span className="pointer-events-none absolute inset-x-6 top-1 h-1/3 rounded-full bg-gradient-to-b from-white/10 to-transparent" />
+      </div>
+      <span className="mt-3 block text-center font-display text-base uppercase tracking-[0.4em] text-racing-yellow [text-shadow:0_0_10px_oklch(0.86_0.18_95_/_0.28)] sm:text-lg">
+        Lights out
+      </span>
+    </div>
+  );
+}
+
 export function IgnitionLights() {
   const reduceMotion = useReducedMotion();
   const skipEntry = useHeroEntrySkip();
 
-  if (reduceMotion || skipEntry) {
+  if (skipEntry) {
     return null;
+  }
+
+  if (reduceMotion) {
+    return <ReducedIgnitionSignature />;
   }
 
   return (
     <>
-      {/* Halo radial circular — camada SEPARADA do painel, posicionada
-          como filha direta da `<section>` do hero. É `<motion.div>` (block),
-          com tamanho fixo e posição absoluta na seção; o painel fica em
+      {/* Halo atmosférico do painel da largada — F1 LED bleed sobre
+          a foto da pista. Camada SEPARADA do painel; o painel fica em
           z-30 acima dele.
 
-          IMPORTANTE: o tamanho aqui é deliberadamente conservador porque
-          a `<section>` do hero tem `overflow-hidden` pra clipar parallax,
-          e isso clipa o halo nas bordas da viewport. O centro do halo é
-          posicionado um pouco ABAIXO do top do painel (~4-6% da viewport)
-          pra dar margem pro raio + blur sem que o topo do círculo
-          encoste/cruze a borda superior da section (o que produzia uma
-          linha horizontal bem visível antes).
-          
-          O background `radial-gradient(circle, ...)` + `rounded-full` +
-          `blur-2xl` garantem formato orgânico arredondado. Aumentei a
-          intensidade do gradient (alpha 0.95/0.55) pra compensar o
-          tamanho menor — o glow continua presente, mas não estoura. */}
+          ESTRATÉGIA:
+          - Elipse horizontal (1600×900) que ecoa a forma do painel,
+            não círculo perfeito (parece artificial pro elemento que
+            está iluminando)
+          - 9 paradas de gradiente em decay exponencial real (cada
+            stop ~30-40% da anterior) — elimina qualquer "joelho" na
+            curva, que sob `mix-blend-mode: screen` vira borda visível
+          - Cauda LONGA que vai a 0 só em 75% do raio — falloff
+            ultra-gradual, dissolve no negro da foto sem fronteira
+          - Pico mais baixo (0.78 vs 0.92): glow ATMOSFÉRICO, não flash
+          - Sem filter:blur — gradiente macio o bastante e o blur
+            espalhava cor pra fora do box, que era clipado pela
+            `overflow-hidden` da section (criava o retângulo)
+          - Box gigante (>= viewport) garante que a borda do elemento
+            está sempre fora da área visível; nada pra clipar */}
       <motion.div
         aria-hidden
         initial={{ opacity: 0, scale: 0.6 }}
@@ -82,8 +111,14 @@ export function IgnitionLights() {
           ],
           ease: "easeOut",
         }}
-        className="pointer-events-none absolute left-1/2 top-[30%] z-20 size-[280px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,oklch(0.58_0.23_27_/_0.95)_0%,oklch(0.58_0.23_27_/_0.55)_30%,transparent_72%)] blur-2xl sm:top-[28%] sm:size-[360px] lg:top-[26%] lg:size-[440px]"
-        style={{ mixBlendMode: "screen" }}
+        className="pointer-events-none absolute left-1/2 top-[30%] z-20 -translate-x-1/2 -translate-y-1/2 sm:top-[28%] lg:top-[26%]"
+        style={{
+          width: "min(1600px, 180vmax)",
+          height: "min(900px, 110vmax)",
+          background:
+            "radial-gradient(ellipse, oklch(0.62 0.22 30 / 0.78) 0%, oklch(0.60 0.22 29 / 0.55) 4%, oklch(0.58 0.23 27 / 0.36) 8%, oklch(0.58 0.23 27 / 0.22) 13%, oklch(0.58 0.23 27 / 0.13) 19%, oklch(0.58 0.23 27 / 0.07) 27%, oklch(0.58 0.23 27 / 0.03) 38%, oklch(0.58 0.23 27 / 0.01) 55%, oklch(0.58 0.23 27 / 0) 75%)",
+          mixBlendMode: "screen",
+        }}
       />
 
       {/* Painel das luzes — barra horizontal central, top da viewport.
@@ -108,11 +143,11 @@ export function IgnitionLights() {
               transition: { staggerChildren: STAGGER, delayChildren: 0.4 },
             },
           }}
-          className="relative flex items-center gap-3 rounded-full border border-white/10 bg-racing-blue-deep/90 px-5 py-4 shadow-[0_24px_72px_-16px_oklch(0_0_0_/_0.7)] backdrop-blur-md sm:gap-4 sm:px-7 sm:py-5"
+          className="relative flex items-center gap-3 rounded-full border border-white/10 bg-racing-blue-deep/96 px-5 py-4 shadow-[0_18px_48px_-24px_oklch(0_0_0_/_0.75)] sm:gap-4 sm:px-7 sm:py-5"
         >
-          {Array.from({ length: LIGHT_COUNT }).map((_, idx) => (
+          {LIGHT_KEYS.map((key, idx) => (
             <motion.li
-              key={idx}
+              key={key}
               variants={{
                 dim: {
                   opacity: 0.14,
@@ -204,7 +239,7 @@ export function IgnitionLights() {
               ],
               ease: "easeOut",
             }}
-            className="absolute block font-display text-base uppercase tracking-[0.4em] text-racing-yellow drop-shadow-[0_0_12px_oklch(0.86_0.18_95_/_0.6)] sm:text-lg"
+            className="absolute block font-display text-base uppercase tracking-[0.4em] text-racing-yellow [text-shadow:0_0_10px_oklch(0.86_0.18_95_/_0.38)] sm:text-lg"
           >
             Lights out
           </motion.span>
