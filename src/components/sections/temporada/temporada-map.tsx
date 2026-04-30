@@ -1,8 +1,16 @@
 "use client";
 
-import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
-import { useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import {
   SVG_VIEWBOX,
   clusterStatus,
@@ -19,6 +27,19 @@ import {
   type BrazilStateGeometry,
 } from "./temporada-states-data";
 import { useTemporada } from "./temporada-context";
+
+type StateActivationEvent =
+  | ReactMouseEvent<SVGPathElement>
+  | ReactKeyboardEvent<SVGPathElement>;
+
+type StatePopover = {
+  uf: string;
+  name: string;
+  status: StageStatus;
+  stages: StageWithStatus[];
+  x: number;
+  y: number;
+};
 
 /**
  * TemporadaMap — mapa awwwards-tier do Brasil:
@@ -65,9 +86,9 @@ function buildArcPath(
   )} ${bx.toFixed(1)} ${by.toFixed(1)}`;
 }
 
-type TrajectoryArcsProps = {
+type TrajectoryArcsProps = Readonly<{
   stages: StageWithStatus[];
-};
+}>;
 
 function TrajectoryArcs({ stages }: TrajectoryArcsProps) {
   const reduce = useReducedMotion();
@@ -84,7 +105,7 @@ function TrajectoryArcs({ stages }: TrajectoryArcsProps) {
         id: `${from.id}-${to.id}`,
         d: buildArcPath(a.x, a.y, b.x, b.y, curvature),
         // Entrada após pinos: 1.2 + maxRound*0.08 + 0.1 + i*0.18
-        delay: 2.0 + i * 0.18,
+        delay: 2 + i * 0.18,
         // "concluído" se ambas as etapas já passaram
         completed: from.status === "past" && to.status === "past",
       };
@@ -174,12 +195,27 @@ function clusterAriaLabel(cluster: StageCluster, status: StageStatus): string {
   const rounds = cluster.stages
     .map((s) => `etapa ${s.round} em ${s.longDate}`)
     .join("; ");
-  return `${cluster.city}${
-    cluster.state !== "—" ? `, ${cluster.state}` : ""
-  }. ${rounds}. ${statusLabel}.`;
+  const stateSuffix = cluster.state === "—" ? "" : `, ${cluster.state}`;
+
+  return `${cluster.city}${stateSuffix}. ${rounds}. ${statusLabel}.`;
 }
 
-function Pin({ cluster, scale }: { cluster: StageCluster; scale: number }) {
+function stageStatusTextClass(status: StageStatus): string {
+  switch (status) {
+    case "next":
+      return "text-racing-red";
+    case "past":
+      return "text-racing-mute";
+    case "upcoming":
+    case "tbd":
+      return "text-racing-blue-bright";
+  }
+}
+
+function Pin({
+  cluster,
+  scale,
+}: Readonly<{ cluster: StageCluster; scale: number }>) {
   const reduce = useReducedMotion();
   const { setHoveredId, setActiveId, isHighlighted } = useTemporada();
   const status = clusterStatus(cluster);
@@ -193,38 +229,38 @@ function Pin({ cluster, scale }: { cluster: StageCluster; scale: number }) {
   const highlighted = cluster.stages.some((s) => isHighlighted(s.id));
 
   return (
-    <motion.g
-      transform={`translate(${x}, ${y})`}
-      onMouseEnter={() => setHoveredId(primaryStage.id)}
-      onMouseLeave={() => setHoveredId(null)}
-      onFocus={() => setHoveredId(primaryStage.id)}
-      onBlur={() => setHoveredId(null)}
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={
-        reduce
-          ? { duration: 0 }
-          : {
-              type: "spring",
-              stiffness: 320,
-              damping: 22,
-              delay: 1.2 + cluster.stages[0].round * 0.08,
-            }
-      }
-      style={{
-        cursor: "pointer",
-        transformOrigin: "center",
-        transformBox: "fill-box",
-      }}
-    >
+    <g transform={`translate(${x}, ${y})`}>
+      <motion.g
+        onMouseEnter={() => setHoveredId(primaryStage.id)}
+        onMouseLeave={() => setHoveredId(null)}
+        onFocus={() => setHoveredId(primaryStage.id)}
+        onBlur={() => setHoveredId(null)}
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={
+          reduce
+            ? { duration: 0 }
+            : {
+                type: "spring",
+                stiffness: 320,
+                damping: 22,
+                delay: 1.2 + cluster.stages[0].round * 0.08,
+              }
+        }
+        style={{
+          cursor: "pointer",
+          outline: "none",
+          transformOrigin: "center",
+          transformBox: "fill-box",
+        }}
+      >
       {/* Drop shadow soft — destaca o pino sobre o fill colorido do estado */}
       <circle
         cx={0}
         cy={2}
         r={radius + 2}
         fill="oklch(0.05 0 0)"
-        opacity={0.55}
-        style={{ filter: "blur(3px)" }}
+        opacity={0.28}
       />
 
       {/* Anel base branco — separa o pino do estado */}
@@ -249,6 +285,7 @@ function Pin({ cluster, scale }: { cluster: StageCluster; scale: number }) {
           style={{
             animation: "pin-pulse 1.8s ease-out infinite",
             transformOrigin: "center",
+            transformBox: "fill-box",
           }}
         />
       ) : null}
@@ -331,7 +368,8 @@ function Pin({ cluster, scale }: { cluster: StageCluster; scale: number }) {
         }}
         style={{ outline: "none" }}
       />
-    </motion.g>
+      </motion.g>
+    </g>
   );
 }
 
@@ -356,18 +394,62 @@ const STATE_FILL_ACTIVE_BY_STATUS: Record<StageStatus, string> = {
 const STATE_DEFAULT_FILL = "oklch(0.22 0.05 258 / 0.55)";
 const STATE_DEFAULT_FILL_ACTIVE = "oklch(0.28 0.07 258 / 0.75)";
 
-const labelVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 0.18 },
+const STATUS_LABELS: Record<StageStatus, string> = {
+  past: "Realizada",
+  next: "Próxima",
+  upcoming: "Futura",
+  tbd: "A definir",
 };
 
-type StateLayerProps = {
+type StateLayerProps = Readonly<{
   state: BrazilStateGeometry;
   index: number;
   status: StageStatus | null;
   hostStages: StageWithStatus[];
-  onStateClick: (uf: string) => void;
-};
+  onStateClick: (
+    state: BrazilStateGeometry,
+    event: StateActivationEvent
+  ) => void;
+}>;
+
+function stateStroke(active: boolean, isHost: boolean): string {
+  if (active) {
+    return "var(--racing-white)";
+  }
+
+  if (isHost) {
+    return "oklch(0.62 0.20 252 / 0.55)";
+  }
+
+  return "oklch(1 0 0 / 0.10)";
+}
+
+function stateStrokeWidth(active: boolean, isHost: boolean): number {
+  if (active) {
+    return 1.4;
+  }
+
+  if (isHost) {
+    return 1;
+  }
+
+  return 0.7;
+}
+
+function hostStateAriaLabel(
+  state: BrazilStateGeometry,
+  hostStages: StageWithStatus[]
+): string {
+  if (hostStages.length === 1) {
+    return `${state.name}, ${state.uf}. Etapa ${hostStages[0].round} em ${hostStages[0].longDate}.`;
+  }
+
+  const stages = hostStages
+    .map((s) => `etapa ${s.round} em ${s.longDate}`)
+    .join("; ");
+
+  return `${state.name}, ${state.uf}. ${hostStages.length} etapas: ${stages}.`;
+}
 
 function StateLayer({
   state,
@@ -395,6 +477,11 @@ function StateLayer({
   // cuspirem texto fora da silhueta. Limite: max 14, min 7.
   const minSide = Math.min(state.bbox.w, state.bbox.h);
   const labelSize = Math.max(7, Math.min(14, minSide * 0.22));
+  const labelY = isHost
+    ? state.centroid.y - Math.max(14, labelSize * 1.8)
+    : state.centroid.y;
+  const labelOpacity = isHost ? 0.08 : 0.18;
+  const activeLabelOpacity = isHost ? 0.45 : 0.9;
 
   // Stagger de entrada: norte → sul (BRAZIL_STATES já vem ordenado).
   const enterDelay = reduce ? 0 : 0.15 + index * 0.025;
@@ -405,19 +492,15 @@ function StateLayer({
       onMouseLeave={() => setHoveredStateUf(null)}
       onFocus={() => setHoveredStateUf(state.uf)}
       onBlur={() => setHoveredStateUf(null)}
-      style={{ cursor: isHost ? "pointer" : "default" }}
+      style={{ cursor: isHost ? "pointer" : "default", outline: "none" }}
     >
       {/* Path do estado — preenchimento + borda animada */}
       <motion.path
         d={state.path}
         animate={{
           fill: currentFill,
-          stroke: active
-            ? "var(--racing-white)"
-            : isHost
-            ? "oklch(0.62 0.20 252 / 0.55)"
-            : "oklch(1 0 0 / 0.10)",
-          strokeWidth: active ? 1.4 : isHost ? 1 : 0.7,
+          stroke: stateStroke(active, isHost),
+          strokeWidth: stateStrokeWidth(active, isHost),
           opacity: 1,
           pathLength: 1,
         }}
@@ -441,25 +524,15 @@ function StateLayer({
         }}
         strokeLinejoin="round"
         strokeLinecap="round"
-        style={{ willChange: "opacity, fill, stroke" }}
+        style={{ outline: "none", willChange: "opacity, fill, stroke" }}
         role={isHost ? "button" : "presentation"}
         tabIndex={isHost ? 0 : -1}
-        aria-label={
-          isHost
-            ? `${state.name}, ${state.uf}. ${
-                hostStages.length === 1
-                  ? `Etapa ${hostStages[0].round} em ${hostStages[0].longDate}.`
-                  : `${hostStages.length} etapas: ${hostStages
-                      .map((s) => `etapa ${s.round} em ${s.longDate}`)
-                      .join("; ")}.`
-              }`
-            : undefined
-        }
-        onClick={() => onStateClick(state.uf)}
+        aria-label={isHost ? hostStateAriaLabel(state, hostStages) : undefined}
+        onClick={(e) => onStateClick(state, e)}
         onKeyDown={(e) => {
           if (isHost && (e.key === "Enter" || e.key === " ")) {
             e.preventDefault();
-            onStateClick(state.uf);
+            onStateClick(state, e);
           }
         }}
       />
@@ -476,10 +549,9 @@ function StateLayer({
           }
           strokeWidth={1.8}
           strokeLinejoin="round"
-          opacity={0.7}
-          style={{ filter: "blur(2.5px)" }}
+          opacity={0.55}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.7 }}
+          animate={{ opacity: 0.55 }}
           transition={{ duration: 0.25 }}
           pointerEvents="none"
         />
@@ -488,7 +560,7 @@ function StateLayer({
       {/* Sigla UF — discreta no centroide */}
       <motion.text
         x={state.centroid.x}
-        y={state.centroid.y}
+        y={labelY}
         textAnchor="middle"
         dominantBaseline="middle"
         className="select-none font-mono"
@@ -496,9 +568,12 @@ function StateLayer({
         fontWeight={700}
         fill="var(--racing-white)"
         style={{ letterSpacing: "0.1em", pointerEvents: "none" }}
-        initial="hidden"
-        animate={active ? { opacity: 0.9 } : "visible"}
-        variants={reduce ? undefined : labelVariants}
+        initial={{ opacity: 0 }}
+        animate={
+          active
+            ? { opacity: activeLabelOpacity }
+            : { opacity: labelOpacity }
+        }
         transition={{
           duration: 0.4,
           delay: reduce ? 0 : enterDelay + 0.5,
@@ -510,24 +585,138 @@ function StateLayer({
   );
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getPopoverPoint(
+  event: StateActivationEvent,
+  container: HTMLDivElement | null
+) {
+  if (!container) return { x: 0, y: 0 };
+
+  const containerRect = container.getBoundingClientRect();
+  const targetRect = event.currentTarget.getBoundingClientRect();
+  const isPointerEvent = "clientX" in event;
+  const rawX = isPointerEvent
+    ? event.clientX - containerRect.left
+    : targetRect.left + targetRect.width / 2 - containerRect.left;
+  const rawY = isPointerEvent
+    ? event.clientY - containerRect.top
+    : targetRect.top + targetRect.height / 2 - containerRect.top;
+
+  return {
+    x: clamp(rawX, 150, Math.max(150, containerRect.width - 150)),
+    y: clamp(rawY, 150, Math.max(150, containerRect.height - 32)),
+  };
+}
+
+function StateStagePopover({
+  popover,
+  onClose,
+}: Readonly<{
+  popover: StatePopover;
+  onClose: () => void;
+}>) {
+  return (
+    <div
+      key={popover.uf}
+      style={{
+        left: popover.x,
+        top: popover.y,
+        transform: "translate(-50%, calc(-100% - 18px))",
+      }}
+      className="pointer-events-auto absolute z-30 w-[min(18rem,calc(100%-2rem))]"
+    >
+      <motion.aside
+        initial={{ opacity: 0, y: 12, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 8, scale: 0.97 }}
+        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+        className="relative overflow-hidden rounded-sm border border-racing-white/15 bg-racing-blue-deep/96 p-4 text-left shadow-[0_18px_56px_-30px_oklch(0_0_0/0.95)]"
+      >
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-racing-blue-bright to-transparent"
+        />
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.35em] text-racing-red">
+              {popover.uf} · {STATUS_LABELS[popover.status]}
+            </p>
+            <h3 className="mt-2 font-display text-2xl uppercase leading-none tracking-tight text-racing-white">
+              {popover.name}
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar informações da etapa"
+            className="grid size-7 shrink-0 place-items-center rounded-full border border-white/10 text-racing-mute transition-colors hover:border-racing-red/50 hover:text-racing-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-racing-blue-bright"
+          >
+            ×
+          </button>
+        </div>
+
+        <ol className="mt-4 space-y-3 border-t border-white/10 pt-4">
+          {popover.stages.map((stage) => (
+            <li
+              key={stage.id}
+              className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1"
+            >
+              <span
+                className={`mt-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] ${stageStatusTextClass(stage.status)}`}
+              >
+                R{stage.round.toString().padStart(2, "0")}
+              </span>
+              <div>
+                <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-racing-white">
+                  {stage.longDate}
+                </p>
+                <p className="mt-0.5 text-xs leading-snug text-racing-white/65">
+                  {stage.city} · {stage.circuit}
+                </p>
+                <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.25em] text-racing-mute">
+                  {STATUS_LABELS[stage.status]}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <span
+          aria-hidden
+          className="absolute left-1/2 top-full h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-racing-white/15 bg-racing-blue-deep/90"
+        />
+      </motion.aside>
+    </div>
+  );
+}
+
 // ───────────────────────────────────────────────────────────────
 // Mapa principal
 // ───────────────────────────────────────────────────────────────
 
-type Props = {
+type Props = Readonly<{
   stages: StageWithStatus[];
-};
+  className?: string;
+}>;
 
-export function TemporadaMap({ stages }: Props) {
+export function TemporadaMap({ stages, className }: Props) {
   const reduce = useReducedMotion();
   const { setActiveId } = useTemporada();
+  const containerRef = useRef<HTMLDivElement>(null);
   const [emptyStateFlash, setEmptyStateFlash] = useState<string | null>(null);
+  const [statePopover, setStatePopover] = useState<StatePopover | null>(null);
 
   const clusters = useMemo(() => groupClusters(stages), [stages]);
   const byState = useMemo(() => groupByState(stages), [stages]);
 
-  const handleStateClick = (uf: string) => {
-    const list = byState.get(uf);
+  const handleStateClick = (
+    state: BrazilStateGeometry,
+    event: StateActivationEvent
+  ) => {
+    const list = byState.get(state.uf);
     if (list && list.length > 0) {
       // Prioriza a próxima etapa, se houver
       const target =
@@ -535,8 +724,29 @@ export function TemporadaMap({ stages }: Props) {
         list.find((s) => s.status === "upcoming") ??
         list[0];
       setActiveId(target.id);
+      setEmptyStateFlash(null);
+      setStatePopover({
+        uf: state.uf,
+        name: state.name,
+        status: stateStatus(state.uf, byState) ?? target.status,
+        stages: list,
+        ...getPopoverPoint(event, containerRef.current),
+      });
     }
   };
+
+  useEffect(() => {
+    if (!statePopover) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setStatePopover(null);
+      }
+    }
+
+    globalThis.addEventListener("keydown", onKeyDown);
+    return () => globalThis.removeEventListener("keydown", onKeyDown);
+  }, [statePopover]);
 
   // Auto-clear do flash "sem etapa"
   useEffect(() => {
@@ -546,12 +756,12 @@ export function TemporadaMap({ stages }: Props) {
   }, [emptyStateFlash]);
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className={cn("relative", className)}>
       <svg
         viewBox={`0 0 ${SVG_VIEWBOX.width} ${SVG_VIEWBOX.height}`}
         role="img"
         aria-label="Mapa do Brasil com 27 estados e 8 etapas do Moto1000GP 2026"
-        className="h-auto w-full"
+        className="h-[52svh] min-h-[20rem] w-full sm:h-[min(62svh,42rem)] sm:min-h-[24rem] lg:h-[min(78svh,54rem)] lg:min-h-[34rem]"
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
@@ -595,7 +805,7 @@ export function TemporadaMap({ stages }: Props) {
         />
 
         {/* Scanline radar — passa de cima a baixo continuamente */}
-        {!reduce ? (
+        {reduce ? null : (
           <motion.rect
             x={0}
             width={SVG_VIEWBOX.width}
@@ -605,15 +815,15 @@ export function TemporadaMap({ stages }: Props) {
             initial={{ y: -120 }}
             animate={{ y: SVG_VIEWBOX.height }}
             transition={{
-              duration: 5.2,
+              duration: 5.8,
               ease: "linear",
               repeat: Infinity,
-              repeatDelay: 2,
+              repeatDelay: 5,
               delay: 2.5,
             }}
             style={{ pointerEvents: "none" }}
           />
-        ) : null}
+        )}
 
         {/* 27 estados */}
         <g aria-label="Estados">
@@ -627,11 +837,12 @@ export function TemporadaMap({ stages }: Props) {
                 index={index}
                 status={status}
                 hostStages={hostStages}
-                onStateClick={(uf) => {
-                  if (byState.has(uf)) {
-                    handleStateClick(uf);
+                onStateClick={(state, event) => {
+                  if (byState.has(state.uf)) {
+                    handleStateClick(state, event);
                   } else {
-                    setEmptyStateFlash(uf);
+                    setStatePopover(null);
+                    setEmptyStateFlash(state.uf);
                   }
                 }}
               />
@@ -649,6 +860,15 @@ export function TemporadaMap({ stages }: Props) {
           ))}
         </g>
       </svg>
+
+      <AnimatePresence>
+        {statePopover ? (
+          <StateStagePopover
+            popover={statePopover}
+            onClose={() => setStatePopover(null)}
+          />
+        ) : null}
+      </AnimatePresence>
 
       {/* Toast micro-feedback ao clicar em estado vazio */}
       <AnimatePresence>
