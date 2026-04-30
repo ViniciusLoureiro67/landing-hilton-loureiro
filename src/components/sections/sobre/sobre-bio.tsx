@@ -3,8 +3,6 @@
 import {
   motion,
   useInView,
-  useScroll,
-  useTransform,
   type Variants,
 } from "framer-motion";
 import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
@@ -21,8 +19,6 @@ import { useRef } from "react";
  *   - Highlights mantém ritmo de leitura — fatos importantes em peso
  *     mais alto e cor branca pura
  *   - Trigger via `amount: 0.15` (mais robusto que `margin` em mobile)
- *   - Parallax no scroll: a coluna inteira se move pra cima levemente,
- *     em direção oposta à foto (assimetria racing)
  */
 
 const PARAGRAPHS = [
@@ -113,24 +109,12 @@ export function SobreBio() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.15 });
 
-  // Scroll-driven parallax — coluna sobe levemente em oposição à foto
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-  const y = useTransform(scrollYProgress, [0, 1], ["3%", "-5%"]);
-
   return (
     <motion.div
       ref={ref}
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
       variants={reduce ? undefined : containerVariants}
-      style={
-        reduce
-          ? undefined
-          : { y, willChange: "transform" }
-      }
       className="space-y-7"
     >
       <motion.div
