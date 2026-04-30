@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 
 /**
  * SobreMarquee — marquee VERTICAL infinito com texto editorial racing.

@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  motion,
-  useInView,
-  useReducedMotion,
-  type Variants,
-} from "framer-motion";
+import { motion, useInView, type Variants } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { useRef } from "react";
 import { FlipCounter } from "@/components/motion/flip-counter";
 

@@ -3,11 +3,11 @@
 import {
   motion,
   useInView,
-  useReducedMotion,
   useScroll,
   useTransform,
   type Variants,
 } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { useRef } from "react";
 
 /**
