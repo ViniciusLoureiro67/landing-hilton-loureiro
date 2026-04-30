@@ -339,6 +339,23 @@
     animation: speedlines-drift 28s linear infinite;
   }
 
+  /* Mapa Temporada — pulso do pino "próxima etapa". Anel cresce e desaparece
+     em ~1.8s, sinalizando "esta é a próxima". Desliga em reduced-motion. */
+  @keyframes pin-pulse {
+    0% {
+      transform: scale(0.6);
+      opacity: 0.85;
+    }
+    70% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+  }
+
   /* Flash radial da largada — quando a luz verde acende, expande pelo hero
      todo num pulso curto e dissolve. */
   @keyframes ignition-flash {
