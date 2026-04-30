@@ -29,8 +29,6 @@ export function ScrollIndicator() {
   const scrollProgress = useHeroScrollProgress();
   // Linha preenche conforme a seção sai do viewport.
   const fillScaleY = useTransform(scrollProgress, [0, 0.85], [0, 1]);
-  // Pulso só roda enquanto o usuário está no início do hero.
-  const idlePulseOpacity = useTransform(scrollProgress, [0, 0.05, 0.15], [1, 1, 0]);
   // Indicador fade-out no fim.
   const containerOpacity = useTransform(scrollProgress, [0, 0.6, 0.9], [1, 1, 0]);
   const containerY = useTransform(scrollProgress, [0, 0.9], [0, 24]);
@@ -67,23 +65,13 @@ export function ScrollIndicator() {
             {/* Fundo da régua — gradiente sutil */}
             <span className="absolute inset-0 bg-gradient-to-b from-racing-mute/45 to-racing-mute/10" />
 
-            {/* Pulso idle — só visível antes de o usuário rolar */}
-            {!reduceMotion && (
-              <motion.span
-                style={{ transformOrigin: "top center", opacity: idlePulseOpacity }}
-                animate={{ scaleY: [0.18, 1, 0.18] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 2.2,
-                  ease: "easeInOut",
-                }}
-                className="absolute inset-0 bg-gradient-to-b from-racing-blue-bright via-racing-blue-bright/60 to-transparent"
-              />
-            )}
-
             {/* Fill — preenche conforme rola, top-down. Vermelho racing
                 pra ecoar o slash do logo "76". */}
-            {!reduceMotion && (
+            {reduceMotion ? (
+              <span
+                className="absolute inset-0 bg-gradient-to-b from-racing-red via-racing-red/85 to-racing-blue-bright/60 opacity-80"
+              />
+            ) : (
               <motion.span
                 style={{ scaleY: fillScaleY, transformOrigin: "top center" }}
                 className="absolute inset-0 bg-gradient-to-b from-racing-red via-racing-red/85 to-racing-blue-bright/60"
