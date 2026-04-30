@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { useHeroEntrySkip } from "./use-hero-entry-skip";
 
 /**

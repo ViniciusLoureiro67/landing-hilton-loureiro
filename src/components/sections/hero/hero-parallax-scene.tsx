@@ -5,11 +5,11 @@ import { getImageProps } from "next/image";
 import {
   motion,
   useMotionValue,
-  useReducedMotion,
   useSpring,
   useTransform,
   type MotionValue,
 } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { useHeroEntrySkip } from "./use-hero-entry-skip";
 import { useHeroScrollProgress } from "./hero-scroll-context";
 

@@ -6,8 +6,8 @@ import {
   motion,
   useMotionValue,
   useSpring,
-  useReducedMotion,
 } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { ArrowRight, ChevronDown, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WHATSAPP_HERO_HREF } from "@/lib/links";

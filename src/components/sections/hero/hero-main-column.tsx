@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion, useTransform } from "framer-motion";
+import { motion, useTransform } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { useHeroScrollProgress } from "./hero-scroll-context";
 
 /**

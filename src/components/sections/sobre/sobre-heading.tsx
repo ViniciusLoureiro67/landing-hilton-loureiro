@@ -3,10 +3,10 @@
 import {
   motion,
   useInView,
-  useReducedMotion,
   useScroll,
   useTransform,
 } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { useRef } from "react";
 import { CharReveal } from "@/components/motion/char-reveal";
 
