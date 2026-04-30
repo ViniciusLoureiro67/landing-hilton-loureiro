@@ -367,6 +367,73 @@ Adicionar **abaixo** de `WHATSAPP_HERO_HREF` (sem mexer nos existentes):
 
 ---
 
+## Fase 6 — Implementação
+
+| Arquivo | Status | Notas |
+|---------|--------|-------|
+| `src/lib/links.ts` | ✅ modificado | Adicionado `WHATSAPP_PATROCINIO_HREF` com mensagem específica de patrocínio (lead que já leu o pitch e pede projeto comercial) |
+| `src/components/sections/patrocinio/patrocinio-copy.ts` | ✅ criado | Copy pt-BR centralizada + `ATIVACOES` (5 itens) + `PATROCINIO_STATS` (3 itens) com TODO(cliente) onde precisa de validação |
+| `src/components/sections/patrocinio/index.tsx` | ✅ criado | Server orquestrador, `<section id="patrocinio" aria-labelledby="patrocinio-heading">`, "76" de fundo, max-w-7xl |
+| `src/components/sections/patrocinio/patrocinio-heading.tsx` | ✅ criado | Replica padrão SobreHeading: kicker "05 / Para sua marca" + CharReveal no H2 + slash crescente + linha decor |
+| `src/components/sections/patrocinio/patrocinio-pitch.tsx` | ✅ criado | Pull-quote (slide-in lateral + barra vermelha scaleY) + 3 parágrafos cascata, replica SobreBio |
+| `src/components/sections/patrocinio/patrocinio-stats.tsx` | ✅ criado | 3 stats com `<FlipCounter>` + barra vermelha + clip-path mask reveal vertical (mesma API de SobreStats); suffix "M+"/"K+" estilizado em vermelho fora do FlipCounter |
+| `src/components/sections/patrocinio/patrocinio-ativacao-card.tsx` | ✅ criado | Card individual: MaskReveal diagonal/left/right + tilt 3D no hover (rotateX/rotateY ±4°) + sweep diagonal vermelho + número gigante de fundo + barra inferior crescendo no hover |
+| `src/components/sections/patrocinio/patrocinio-ativacoes.tsx` | ✅ criado | Grid asymmetric 12-col desktop (4/4/4 + 6/6), 2 cols tablet (último full), 1 col mobile; header com kicker + linha crescendo |
+| `src/components/sections/patrocinio/patrocinio-sponsors.tsx` | ✅ criado | 4 nomes em font-heading bold uppercase com CharReveal por nome + diamond vermelho separator (rotacionado, scale-in com stagger) — `<ul aria-label="Patrocinadores oficiais 2026">` |
+| `src/components/sections/patrocinio/patrocinio-cta.tsx` | ✅ criado | Pull-headline char-reveal + scale (0.94→1) + slash decorativo crescendo + botão WhatsApp idêntico ao hero (sweep + icon morph) usando `WHATSAPP_PATROCINIO_HREF` + reassure line |
+| `src/app/page.tsx` | ✅ modificado | Substituído placeholder `<section id="patrocinio">` por `<Patrocinio />`; adicionado `SectionDivider variant="slash" numerator={["04","05"]}` na entrada e `SectionDivider variant="ticker" label="Galeria"` na saída |
+
+### Decisões durante a execução (desvios menores do plano)
+
+1. **Ícone "redes sociais"** — plano sugeria `Instagram` (Lucide), mas esse export não existe no `lucide-react` atual (build error: "Export Instagram doesn't exist"). Trocado por `Megaphone`, que casa semanticamente melhor com "cobertura de bastidores em Reels e Stories" e mantém peso editorial neutro (não é logo de plataforma proprietária).
+2. **Pitch em 7/12 cols (não full)** — o plano não cravou o span. Coloquei `lg:col-span-7` pra gerar respiro à direita, espelhando o padrão editorial de Sobre.
+3. **Stats com suffix "M+"/"K+" estilizado** — em vez de inflar o `value` pra 2.000.000 e perder a leitura do flip, animamos `0→2` e `0→50` e renderizamos o suffix em vermelho fora do FlipCounter (font-size 0.55em). Mantém o flip dramático e a copy clara.
+4. **MaskReveal com `h-full w-full`** — necessário pra o `<motion.article>` interno preencher o `<li>` flex no grid.
+
+### Critérios de aceite — checagem final
+
+- [x] Seção `#patrocinio` substitui o placeholder em `src/app/page.tsx`
+- [x] Acessível via clique em "Para sua marca" no navbar (âncora `#patrocinio` mantida)
+- [x] Heading "Para sua marca" com CharReveal + slash crescente
+- [x] 3 stats massivos com `<FlipCounter>` (mesmo padrão de SobreStats)
+- [x] Grid de 5 ativações com clip-path mask reveal + tilt 3D no hover
+- [x] Bloco de patrocinadores com 4 nomes em tipografia tratada + diamond separator
+- [x] CTA "Falar sobre patrocínio" abrindo WhatsApp com mensagem **diferente** do hero
+- [x] `WHATSAPP_PATROCINIO_HREF` exportada em `src/lib/links.ts` com comentário explicando a persona-alvo
+- [x] SectionDivider de entrada (slash 04→05) e saída (ticker "Galeria")
+- [x] Reveals dramáticos em todos os elementos (sem fade genérico)
+- [x] Touch targets do CTA: `h-12 min-w-[15rem]`
+- [x] `useReducedMotion` honrado em todos os clients (mesmo com flag global desligada)
+- [x] `npm run lint` zero erros
+- [x] `npm run build` zero erros
+- [x] Sem novas dependências em `package.json`
+
+---
+
+## Fase 7 — Verificação
+
+### Comandos
+
+| Comando | Resultado |
+|---------|-----------|
+| `npm run lint` | ✅ zero erros, zero warnings |
+| `npm run build` | ✅ Compiled successfully in ~1.7s, 6 static pages geradas |
+
+### A validar manualmente (próximo turno — `/walkthrough`)
+
+- Inspeção visual em 375 / 768 / 1024 / 1440
+- Confirmar contraste racing-red sobre racing-blue-deep nos números/CTAs (≥ 4.5:1 esperado)
+- Confirmar que CharReveal não quebra layout em telas muito estreitas
+- Confirmar timing das cascatas (heading → pitch → stats → ativações → sponsors → CTA)
+- Validar tilt 3D dos cards com mouse real (em mobile não há mouse — só MaskReveal)
+- Validar transições entre seções (Temporada → Patrocínio com slash, Patrocínio → Galeria com ticker)
+- Pendências de copy/dados aguardando cliente:
+  - Stats `2M+` e `50K+` (impressões + audiência) — TODO(cliente)
+  - Texto exato da mensagem WhatsApp — TODO(cliente)
+  - Confirmar transmissoras na cobertura editorial — TODO(cliente)
+
+---
+
 ## Resumo executivo
 
 Seção comercial `#patrocinio` posicionada entre Temporada e Galeria. Composição: heading editorial -> pitch (pull-quote + parágrafos) -> 3 stats com FlipCounter -> grid de 5 ativações tipográficas -> showcase de patrocinadores atuais -> CTA WhatsApp dedicado. Reusa primitivos já existentes (`CharReveal`, `MaskReveal`, `FlipCounter`, `SectionDivider`) e padrões consolidados (`SobreHeading`, `SobreStats`, `SobreBio`) sem refactor neles. Adiciona `WHATSAPP_PATROCINIO_HREF` em `src/lib/links.ts` com mensagem específica de patrocínio. Stats e copy ficam com `TODO(cliente)` para revisão antes do deploy. Sem dependências novas. 9 arquivos novos em `src/components/sections/patrocinio/` + 1 acréscimo em `links.ts` + 1 substituição em `page.tsx`. Pronto pra `/exec`.
