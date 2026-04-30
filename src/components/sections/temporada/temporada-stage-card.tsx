@@ -35,8 +35,16 @@ type Props = {
 
 export function TemporadaStageCard({ stage }: Props) {
   const reduce = useReducedMotion();
-  const { setHoveredId, setActiveId, isHighlighted } = useTemporada();
-  const highlighted = isHighlighted(stage.id);
+  const {
+    setHoveredId,
+    setActiveId,
+    setHoveredStateUf,
+    hoveredStateUf,
+    isHighlighted,
+  } = useTemporada();
+  const highlighted =
+    isHighlighted(stage.id) ||
+    (hoveredStateUf !== null && hoveredStateUf === stage.state);
   const isPast = stage.status === "past";
   const isNext = stage.status === "next";
   const isTbd = stage.status === "tbd";
@@ -45,10 +53,22 @@ export function TemporadaStageCard({ stage }: Props) {
     <motion.li
       data-stage-id={stage.id}
       variants={reduce ? undefined : cardVariants}
-      onMouseEnter={() => !isPast && setHoveredId(stage.id)}
-      onMouseLeave={() => setHoveredId(null)}
-      onFocus={() => setHoveredId(stage.id)}
-      onBlur={() => setHoveredId(null)}
+      onMouseEnter={() => {
+        if (!isPast) setHoveredId(stage.id);
+        if (stage.state !== "—") setHoveredStateUf(stage.state);
+      }}
+      onMouseLeave={() => {
+        setHoveredId(null);
+        setHoveredStateUf(null);
+      }}
+      onFocus={() => {
+        setHoveredId(stage.id);
+        if (stage.state !== "—") setHoveredStateUf(stage.state);
+      }}
+      onBlur={() => {
+        setHoveredId(null);
+        setHoveredStateUf(null);
+      }}
       onClick={() => setActiveId(stage.id)}
       aria-current={isNext ? "step" : undefined}
       tabIndex={0}
