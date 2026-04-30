@@ -1,45 +1,41 @@
 "use client";
 
-import { useReducedMotion as useReducedMotionFromFramer } from "framer-motion";
-import { useEffect, useState } from "react";
-
 /**
- * Versão SSR-safe de `useReducedMotion` da Framer Motion.
+ * Hook de preferência de movimento reduzido — DESATIVADO por decisão do
+ * cliente.
  *
- * Por que isso existe? O hook original lê `matchMedia('(prefers-reduced-motion)')`
- * de forma síncrona na primeira render do client. No servidor não há
- * `matchMedia`, então retorna `null` (~falsy). Na primeira render do client,
- * porém, ele já lê o valor real (`true`/`false`) — o que diverge da árvore
- * que o servidor renderizou e quebra a hydration sempre que algum componente
- * usa `useReducedMotion()` para decidir QUAL DOM renderizar (ex.: branch
- * `if (reduce) return <div>...</div>`).
+ * A landing depende do timing cinematográfico (sequência da largada F1,
+ * char-reveals do nome, mask-reveals da foto Sobre, flip counters, switch
+ * points do mapa Temporada etc.) pra entregar a sensação de "vídeo dirigido
+ * por scroll". O fallback estático que existia (entrada via fade simples,
+ * counters em valor final, sem cortina/stripes etc.) descaracterizava a
+ * página de forma considerada inaceitável pelo cliente em testes lado-a-lado.
  *
- * Estratégia: gateamos o valor real atrás de um flag `mounted` (state
- * inicializado como `false` no SSR e na primeira render do client; flipa
- * pra `true` no `useEffect` pós-hidratação). Antes de mounted, retornamos
- * `false` — animações tocam em ambos os lados, hydration nunca falha.
- * Depois do commit, retornamos o valor real do prefers-reduced-motion;
- * componentes que branham por `reduce` trocam pra versão estática então.
+ * Decisão (registrada em código): a landing IGNORA o `prefers-reduced-motion`
+ * do SO. Todos os usuários — Windows, mobile, com a flag ligada ou não —
+ * recebem a versão animada. Os componentes ainda chamam este hook (sem
+ * remover branches), mas o resultado é sempre `false`, então o caminho
+ * animado é o único exercitado.
  *
- * Custo: usuários com reduced-motion veem **um único frame** da versão
- * animada antes do switch — imperceptível na prática (≤16ms) e o preço
- * de ter SSR consistente. Para casos críticos (animações disparadas em
- * mount), combine com `initial={false}` ou um `MotionConfig` no root.
+ * Trade-off de a11y: usuários com `prefers-reduced-motion: reduce` no
+ * SO verão as animações mesmo assim. Mantemos os outros eixos de
+ * acessibilidade (contraste >= 4.5:1, focus visíveis, alt descritivo,
+ * hierarquia de heading, alvos touch >= 44px). Apenas a preferência de
+ * motion é desconsiderada nesta landing.
  *
- * Sobre o lint: `react-hooks/set-state-in-effect` é genericamente bom,
- * mas pra "detectar mount client-side" é o padrão idiomático. Desativamos
- * só nesta linha; tentamos `useSyncExternalStore` primeiro mas em prod
- * minificado o microtask de subscribe não estava notificando React de
- * forma confiável.
+ * Para reativar (ex.: aplicar a outras rotas no futuro), restaure a
+ * versão SSR-safe original:
+ *
+ *   import { useReducedMotion as useReducedMotionFromFramer } from "framer-motion";
+ *   import { useEffect, useState } from "react";
+ *
+ *   export function useReducedMotion(): boolean {
+ *     const [mounted, setMounted] = useState(false);
+ *     const reduce = useReducedMotionFromFramer();
+ *     useEffect(() => { setMounted(true); }, []);
+ *     return mounted ? !!reduce : false;
+ *   }
  */
 export function useReducedMotion(): boolean {
-  const [mounted, setMounted] = useState(false);
-  const reduce = useReducedMotionFromFramer();
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-  }, []);
-
-  return mounted ? !!reduce : false;
+  return false;
 }
