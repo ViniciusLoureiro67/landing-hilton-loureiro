@@ -33,8 +33,16 @@ export function TemporadaGrid() {
   return (
     <TemporadaProvider>
       <div className="grid gap-8 lg:grid-cols-12 lg:gap-10 xl:gap-14">
-        <div className="sticky top-16 z-20 self-start sm:top-20 lg:top-20 lg:col-span-7">
-          <div className="relative -mx-4 overflow-hidden border-y border-racing-white/5 bg-racing-blue-deep/96 px-4 py-4 shadow-[0_20px_60px_-36px_oklch(0_0_0/0.9)] sm:mx-0 sm:rounded-sm sm:border sm:px-5 sm:py-5 lg:px-6 lg:py-6">
+        {/*
+          Sticky apenas em lg+. Em mobile/tablet o mapa fluiria no topo
+          em coluna única e cobriria os cards (z-20 > z-10), por isso
+          desligamos o sticky abaixo de lg. Em lg+, o container vira
+          h-screen com flex items-center, mantendo o mapa verticalmente
+          centralizado conforme a lista (mais alta) rola — padrão de
+          scrollytelling, evita o "espaço vazio embaixo do mapa".
+        */}
+        <div className="self-start lg:sticky lg:top-0 lg:z-20 lg:col-span-7 lg:flex lg:h-screen lg:items-center">
+          <div className="relative -mx-4 w-full overflow-hidden border-y border-racing-white/5 bg-racing-blue-deep/96 px-4 py-4 shadow-[0_20px_60px_-36px_oklch(0_0_0/0.9)] sm:mx-0 sm:rounded-sm sm:border sm:px-5 sm:py-5 lg:px-6 lg:py-6">
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-racing-blue-bright/70 to-transparent"

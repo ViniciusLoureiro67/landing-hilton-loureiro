@@ -40,9 +40,15 @@ export function TemporadaStageCard({ stage }: Props) {
     setHoveredId,
     setActiveId,
     setHoveredStateUf,
+    requestPopoverFor,
     hoveredStateUf,
     isHighlighted,
   } = useTemporada();
+
+  const handleActivate = () => {
+    setActiveId(stage.id);
+    if (stage.state !== "—") requestPopoverFor(stage.state);
+  };
   const highlighted =
     isHighlighted(stage.id) ||
     (hoveredStateUf !== null && hoveredStateUf === stage.state);
@@ -70,13 +76,13 @@ export function TemporadaStageCard({ stage }: Props) {
         setHoveredId(null);
         setHoveredStateUf(null);
       }}
-      onClick={() => setActiveId(stage.id)}
+      onClick={handleActivate}
       aria-current={isNext ? "step" : undefined}
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          setActiveId(stage.id);
+          handleActivate();
         }
       }}
       className={cn(
