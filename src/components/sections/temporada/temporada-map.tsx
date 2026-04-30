@@ -27,6 +27,8 @@ import {
   type BrazilStateGeometry,
 } from "./temporada-states-data";
 import { useTemporada } from "./temporada-context";
+import { CIRCUITS, STAGE_TO_CIRCUIT } from "./temporada-circuits";
+import { CircuitMap } from "./temporada-circuit-map";
 
 type StateActivationEvent =
   | ReactMouseEvent<SVGPathElement>
@@ -39,7 +41,31 @@ type StatePopover = {
   stages: StageWithStatus[];
   x: number;
   y: number;
+  /** Largura calculada em px (proporcional ao container, não ao viewport). */
+  width: number;
+  /** "top" = renderiza acima do ponto; "bottom" = abaixo. */
+  placement: "top" | "bottom";
 };
+
+// Largura do popover é proporcional ao container do mapa (não ao viewport),
+// porque o mapa pode ocupar metade da tela em layout multi-coluna. Sem isso,
+// um mapa de 600px ganhava popover de 280px (47% — visualmente sufocante).
+const POPOVER_MIN_WIDTH = 170;
+const POPOVER_MAX_WIDTH = 240;
+const POPOVER_WIDTH_RATIO = 0.4;
+// Estimativa de altura — varia com nº de etapas, mas usamos um valor médio
+// só pra escolher placement (top vs bottom). Não impacta render real.
+// 280 ≈ minimapa (~80) + cabeçalho (~60) + 1-2 etapas (~140).
+const POPOVER_HEIGHT = 280;
+const POPOVER_GAP = 14;
+
+function computePopoverWidth(containerWidth: number) {
+  return clamp(
+    Math.round(containerWidth * POPOVER_WIDTH_RATIO),
+    POPOVER_MIN_WIDTH,
+    POPOVER_MAX_WIDTH
+  );
+}
 
 /**
  * TemporadaMap — mapa awwwards-tier do Brasil:
@@ -496,6 +522,7 @@ function StateLayer({
     >
       {/* Path do estado — preenchimento + borda animada */}
       <motion.path
+        data-uf={state.uf}
         d={state.path}
         animate={{
           fill: currentFill,
@@ -593,7 +620,8 @@ function getPopoverPoint(
   event: StateActivationEvent,
   container: HTMLDivElement | null
 ) {
-  if (!container) return { x: 0, y: 0 };
+  if (!container)
+    return { x: 0, y: 0, width: POPOVER_MIN_WIDTH, placement: "top" as const };
 
   const containerRect = container.getBoundingClientRect();
   const targetRect = event.currentTarget.getBoundingClientRect();
@@ -605,10 +633,36 @@ function getPopoverPoint(
     ? event.clientY - containerRect.top
     : targetRect.top + targetRect.height / 2 - containerRect.top;
 
-  return {
-    x: clamp(rawX, 150, Math.max(150, containerRect.width - 150)),
-    y: clamp(rawY, 150, Math.max(150, containerRect.height - 32)),
-  };
+  return computePopoverPosition(rawX, rawY, containerRect);
+}
+
+/**
+ * Decide onde colar o popover dado um ponto âncora no container:
+ *  - X é clampado pra metade da largura estimada não vazar nas bordas.
+ *  - Placement vira "bottom" quando não cabe acima do ponto (mapa baixo
+ *    ou clique perto do topo); fica "top" como default.
+ */
+function computePopoverPosition(
+  rawX: number,
+  rawY: number,
+  containerRect: { width: number; height: number }
+) {
+  const width = computePopoverWidth(containerRect.width);
+  const halfWidth = width / 2;
+  const minX = Math.min(halfWidth + 4, containerRect.width / 2);
+  const x = clamp(rawX, minX, Math.max(minX, containerRect.width - minX));
+
+  const fitsAbove = rawY - POPOVER_GAP - POPOVER_HEIGHT >= 8;
+  const placement: "top" | "bottom" = fitsAbove ? "top" : "bottom";
+
+  const minY = placement === "top" ? POPOVER_HEIGHT + POPOVER_GAP : 8;
+  const maxY =
+    placement === "top"
+      ? Math.max(minY, containerRect.height - 8)
+      : Math.max(minY, containerRect.height - POPOVER_HEIGHT - POPOVER_GAP);
+  const y = clamp(rawY, minY, maxY);
+
+  return { x, y, width, placement };
 }
 
 function StateStagePopover({
@@ -618,33 +672,48 @@ function StateStagePopover({
   popover: StatePopover;
   onClose: () => void;
 }>) {
+  const isBottom = popover.placement === "bottom";
+  // Todas as etapas do mesmo UF rodam no mesmo circuito — pega da primeira.
+  const firstStageId = popover.stages[0]?.id;
+  const circuitKey = firstStageId
+    ? STAGE_TO_CIRCUIT[firstStageId as keyof typeof STAGE_TO_CIRCUIT]
+    : undefined;
+  const circuit = circuitKey ? CIRCUITS[circuitKey] : null;
+  // top: popover sobe a partir da âncora (translate -100% - gap)
+  // bottom: popover desce a partir da âncora (translate 0 + gap)
+  const wrapperTransform = isBottom
+    ? `translate(-50%, ${POPOVER_GAP}px)`
+    : `translate(-50%, calc(-100% - ${POPOVER_GAP}px))`;
+
   return (
     <div
       key={popover.uf}
+      data-temporada-popover
       style={{
         left: popover.x,
         top: popover.y,
-        transform: "translate(-50%, calc(-100% - 18px))",
+        width: popover.width,
+        transform: wrapperTransform,
       }}
-      className="pointer-events-auto absolute z-30 w-[min(18rem,calc(100%-2rem))]"
+      className="pointer-events-auto absolute z-30"
     >
       <motion.aside
-        initial={{ opacity: 0, y: 12, scale: 0.96 }}
+        initial={{ opacity: 0, y: isBottom ? -8 : 12, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 8, scale: 0.97 }}
+        exit={{ opacity: 0, y: isBottom ? -6 : 8, scale: 0.97 }}
         transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-        className="relative overflow-hidden rounded-sm border border-racing-white/15 bg-racing-blue-deep/96 p-4 text-left shadow-[0_18px_56px_-30px_oklch(0_0_0/0.95)]"
+        className="relative overflow-hidden rounded-sm border border-racing-white/15 bg-racing-blue-deep/96 p-3 text-left shadow-[0_18px_56px_-30px_oklch(0_0_0/0.95)]"
       >
         <span
           aria-hidden
           className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-racing-blue-bright to-transparent"
         />
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.35em] text-racing-red">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="truncate font-mono text-[9px] font-bold uppercase tracking-[0.3em] text-racing-red">
               {popover.uf} · {STATUS_LABELS[popover.status]}
             </p>
-            <h3 className="mt-2 font-display text-2xl uppercase leading-none tracking-tight text-racing-white">
+            <h3 className="mt-1.5 truncate font-display text-lg uppercase leading-none tracking-tight text-racing-white">
               {popover.name}
             </h3>
           </div>
@@ -652,31 +721,37 @@ function StateStagePopover({
             type="button"
             onClick={onClose}
             aria-label="Fechar informações da etapa"
-            className="grid size-7 shrink-0 place-items-center rounded-full border border-white/10 text-racing-mute transition-colors hover:border-racing-red/50 hover:text-racing-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-racing-blue-bright"
+            className="grid size-6 shrink-0 place-items-center rounded-full border border-white/10 text-racing-mute transition-colors hover:border-racing-red/50 hover:text-racing-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-racing-blue-bright"
           >
             ×
           </button>
         </div>
 
-        <ol className="mt-4 space-y-3 border-t border-white/10 pt-4">
+        {circuit ? (
+          <div className="mt-2.5 aspect-[100/60] w-full">
+            <CircuitMap circuit={circuit} />
+          </div>
+        ) : null}
+
+        <ol className="mt-2.5 space-y-2 border-t border-white/10 pt-2.5">
           {popover.stages.map((stage) => (
             <li
               key={stage.id}
-              className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1"
+              className="grid grid-cols-[auto_1fr] gap-x-2.5 gap-y-0.5"
             >
               <span
                 className={`mt-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] ${stageStatusTextClass(stage.status)}`}
               >
                 R{stage.round.toString().padStart(2, "0")}
               </span>
-              <div>
-                <p className="font-heading text-sm font-bold uppercase tracking-[0.12em] text-racing-white">
+              <div className="min-w-0">
+                <p className="font-heading text-[13px] font-bold uppercase tracking-[0.1em] text-racing-white">
                   {stage.longDate}
                 </p>
-                <p className="mt-0.5 text-xs leading-snug text-racing-white/65">
+                <p className="mt-0.5 text-[11px] leading-snug text-racing-white/65">
                   {stage.city} · {stage.circuit}
                 </p>
-                <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.25em] text-racing-mute">
+                <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.25em] text-racing-mute">
                   {STATUS_LABELS[stage.status]}
                 </p>
               </div>
@@ -684,9 +759,16 @@ function StateStagePopover({
           ))}
         </ol>
 
+        {/* Setinha-âncora — em "top" aponta pra baixo (no rodapé do popover);
+            em "bottom" aponta pra cima (no topo do popover). */}
         <span
           aria-hidden
-          className="absolute left-1/2 top-full h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-racing-white/15 bg-racing-blue-deep/90"
+          className={cn(
+            "absolute left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 bg-racing-blue-deep/90",
+            isBottom
+              ? "top-0 -translate-y-1/2 border-l border-t border-racing-white/15"
+              : "top-full -translate-y-1/2 border-b border-r border-racing-white/15"
+          )}
         />
       </motion.aside>
     </div>
@@ -704,13 +786,73 @@ type Props = Readonly<{
 
 export function TemporadaMap({ stages, className }: Props) {
   const reduce = useReducedMotion();
-  const { setActiveId } = useTemporada();
+  const { setActiveId, popoverRequest, requestPopoverFor } = useTemporada();
   const containerRef = useRef<HTMLDivElement>(null);
   const [emptyStateFlash, setEmptyStateFlash] = useState<string | null>(null);
   const [statePopover, setStatePopover] = useState<StatePopover | null>(null);
 
   const clusters = useMemo(() => groupClusters(stages), [stages]);
   const byState = useMemo(() => groupByState(stages), [stages]);
+
+  // Abre o popover programaticamente quando um card da lista é clicado.
+  // Posicionamento: usa o bbox do <path data-uf=...> renderizado em
+  // coordenadas de container — assim reaproveita o mesmo clamp do clique
+  // direto no estado e fica imune a zoom/responsividade.
+  useEffect(() => {
+    if (!popoverRequest) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const stagesForUf = byState.get(popoverRequest.uf);
+    if (!stagesForUf || stagesForUf.length === 0) {
+      requestPopoverFor(null);
+      return;
+    }
+
+    const stateGeom = BRAZIL_STATES.find((s) => s.uf === popoverRequest.uf);
+    if (!stateGeom) {
+      requestPopoverFor(null);
+      return;
+    }
+
+    // Rola o mapa pra dentro do viewport (importante no mobile, onde a
+    // lista fica muito abaixo do mapa) — depois abre o popover sobre o
+    // estado já visível.
+    container.scrollIntoView({ block: "center", behavior: "smooth" });
+
+    // Espera 1 frame pro scroll/layout estabilizar antes de medir o path.
+    const rafId = requestAnimationFrame(() => {
+      const pathEl = container.querySelector<SVGPathElement>(
+        `path[data-uf="${popoverRequest.uf}"]`
+      );
+      if (!pathEl) return;
+      const containerRect = container.getBoundingClientRect();
+      const pathRect = pathEl.getBoundingClientRect();
+      const rawX = pathRect.left + pathRect.width / 2 - containerRect.left;
+      const rawY = pathRect.top + pathRect.height / 2 - containerRect.top;
+      const { x, y, width, placement } = computePopoverPosition(
+        rawX,
+        rawY,
+        containerRect
+      );
+
+      setEmptyStateFlash(null);
+      setStatePopover({
+        uf: stateGeom.uf,
+        name: stateGeom.name,
+        status:
+          stateStatus(stateGeom.uf, byState) ?? stagesForUf[0].status,
+        stages: stagesForUf,
+        x,
+        y,
+        width,
+        placement,
+      });
+      requestPopoverFor(null);
+    });
+
+    return () => cancelAnimationFrame(rafId);
+  }, [popoverRequest, byState, requestPopoverFor]);
 
   const handleStateClick = (
     state: BrazilStateGeometry,
@@ -744,8 +886,26 @@ export function TemporadaMap({ stages, className }: Props) {
       }
     }
 
+    // Click-outside: fecha o popover se o usuário clicar em qualquer
+    // lugar que não seja (a) o próprio popover, (b) um <path data-uf>
+    // — o último impede que o click no estado dispare close+open
+    // imediato e quebre a UX.
+    function onPointerDown(event: PointerEvent) {
+      const target = event.target as Element | null;
+      if (!target) return;
+      if (target.closest("[data-temporada-popover]")) return;
+      if (target.closest("[data-uf]")) return;
+      if (target.closest("[data-stage-id]")) return;
+      setStatePopover(null);
+    }
+
     globalThis.addEventListener("keydown", onKeyDown);
-    return () => globalThis.removeEventListener("keydown", onKeyDown);
+    // Usar capture pra rodar antes do handler do path (que faria reabrir)
+    globalThis.addEventListener("pointerdown", onPointerDown, true);
+    return () => {
+      globalThis.removeEventListener("keydown", onKeyDown);
+      globalThis.removeEventListener("pointerdown", onPointerDown, true);
+    };
   }, [statePopover]);
 
   // Auto-clear do flash "sem etapa"
