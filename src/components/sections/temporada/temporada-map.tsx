@@ -1,135 +1,142 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
-import { useMemo } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  type Variants,
+} from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import {
   SVG_VIEWBOX,
   clusterStatus,
+  groupByState,
   groupClusters,
   projectLatLon,
+  stateStatus,
   type StageCluster,
   type StageStatus,
   type StageWithStatus,
 } from "./temporada-data";
+import {
+  BRAZIL_STATES,
+  type BrazilStateGeometry,
+} from "./temporada-states-data";
 import { useTemporada } from "./temporada-context";
 
 /**
- * TemporadaMap — SVG estilizado do Brasil com pinos das 8 etapas.
+ * TemporadaMap — mapa awwwards-tier do Brasil:
  *
- * Decisões:
- *   - Silhueta minimalista desenhada com path de ~30 pontos chave
- *     da costa e fronteira oeste (sem estados — escolha de design).
- *   - Sem dependência externa (`react-simple-maps`, topojson, etc.)
- *   - Pinos posicionados via `projectLatLon` (mesma projeção do path)
- *   - Etapas no mesmo local viram cluster com badge "×N"
- *   - Etapas TBD (sem coordenadas) NÃO aparecem aqui — só na lista
- *
- * Acessibilidade:
- *   - `role="img"` + `aria-label` no SVG raiz
- *   - Cada pino é `<button>` com `aria-label` descritivo
- *   - Estado `next` recebe `aria-current="step"` e ring pulsante
+ *   1. 27 estados desenhados como paths individuais (silhueta nacional gerada
+ *      automaticamente da união visual)
+ *   2. Cada UF tem stagger de entrada N→S, path-drawing via stroke-dasharray
+ *      + glow se for anfitrião de etapa
+ *   3. Siglas UF muito discretas no centroide (escala adaptativa pro estado)
+ *   4. Pinos das 8 etapas em cascata sobre os estados
+ *   5. Scanline radar contínuo (decorativo, prefers-reduced-motion-aware)
+ *   6. Click em estado-anfitrião destaca seu(s) card(s) na lista; click em
+ *      estado vazio mostra micro-feedback "Sem etapa neste estado"
  */
 
-// Pontos da silhueta do Brasil — todos como [latitude, longitude].
-//
-// Ordem horária, começando pelo extremo Norte (Cabo Orange/AP) e descendo
-// pela costa atlântica, voltando pela fronteira oeste.
-//
-// Pontos suficientes pra reconhecibilidade (saliência NE, ponta sul, bulbo
-// amazônico) sem exagerar em detalhe — a estética é "silhueta editorial",
-// não cartográfica.
-const SILHOUETTE: Array<[number, number]> = [
-  // ── Norte (Amapá → Pará → litoral até Maranhão)
-  [4.5, -51.6], // Cabo Orange (AP)
-  [4.0, -51.4],
-  [2.8, -50.7],
-  [1.4, -48.5], // Belém
-  [-0.5, -47.6],
-  [-1.7, -46.3],
-  [-2.5, -44.3], // São Luís
+// ───────────────────────────────────────────────────────────────
+// Arcos de trajetória — ligam etapas consecutivas (round 1 → 2 → ... → 8)
+// ───────────────────────────────────────────────────────────────
 
-  // ── Nordeste (saliência leste — chave pra reconhecibilidade)
-  [-2.9, -41.7], // Parnaíba
-  [-3.7, -38.5], // Fortaleza
-  [-5.0, -36.4], // Touros
-  [-5.8, -35.2], // Natal
-  [-7.1, -34.8], // João Pessoa (extremo LESTE)
-  [-8.0, -34.9], // Recife
-  [-9.7, -35.7], // Maceió
-  [-10.9, -37.0], // Aracaju
-  [-12.0, -38.5], // Salvador
-  [-13.0, -38.9],
-  [-14.8, -39.0], // Ilhéus
-  [-15.8, -38.9], // Porto Seguro
+/**
+ * Constrói um arco de Bézier quadrático entre dois pontos com curvatura
+ * proporcional à distância. O ponto de controle é deslocado perpendicularmente
+ * pra dar a sensação de "rota desenhada à mão" sobre o mapa.
+ */
+function buildArcPath(
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  curvature = 0.22
+): string {
+  const mx = (ax + bx) / 2;
+  const my = (ay + by) / 2;
+  const dx = bx - ax;
+  const dy = by - ay;
+  const dist = Math.hypot(dx, dy);
+  // Vetor perpendicular normalizado (90° anti-horário)
+  const nx = -dy / dist;
+  const ny = dx / dist;
+  const cx = mx + nx * dist * curvature;
+  const cy = my + ny * dist * curvature;
+  return `M ${ax.toFixed(1)} ${ay.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(
+    1
+  )} ${bx.toFixed(1)} ${by.toFixed(1)}`;
+}
 
-  // ── Sudeste litoral
-  [-18.4, -39.7],
-  [-19.5, -39.8],
-  [-20.3, -40.3], // Vitória
-  [-22.0, -41.5],
-  [-22.9, -42.0], // Cabo Frio
-  [-22.9, -43.2], // Rio
-  [-23.6, -45.4],
-  [-23.8, -45.9],
-  [-24.5, -46.6], // SP litoral
-  [-25.4, -48.5], // Paranaguá
-  [-26.2, -48.6],
-  [-27.6, -48.5], // Florianópolis
-  [-29.0, -49.7],
-  [-30.0, -50.2],
-  [-31.3, -51.0],
-  [-32.0, -52.1], // Rio Grande
-  [-33.5, -53.0],
-  [-33.8, -53.4], // Chuí (extremo SUL)
+type TrajectoryArcsProps = {
+  stages: StageWithStatus[];
+};
 
-  // ── Fronteira sul-sudoeste (Uruguai → Argentina → Paraguai → Bolívia)
-  [-31.5, -55.0],
-  [-30.2, -57.6], // Uruguaiana
-  [-28.0, -56.0],
-  [-27.5, -54.6],
-  [-25.5, -54.6], // Foz do Iguaçu
-  [-23.9, -55.0],
-  [-22.2, -57.6],
-  [-19.6, -57.7], // Corumbá
-  [-17.8, -57.5],
-  [-16.4, -58.4],
-  [-15.5, -60.0], // Cáceres
-  [-13.5, -60.7],
-  [-12.5, -64.0],
-  [-11.0, -65.3], // RO/Bolívia
-  [-10.5, -68.7], // Acre
-  [-9.5, -72.0],
-  [-8.5, -73.0],
-  [-7.5, -73.7], // Cruzeiro do Sul (extremo OESTE)
+function TrajectoryArcs({ stages }: TrajectoryArcsProps) {
+  const reduce = useReducedMotion();
 
-  // ── Noroeste / Norte (fronteira amazônica)
-  [-4.4, -69.9],
-  [-2.5, -69.6], // Tabatinga
-  [-1.0, -69.5],
-  [0.5, -66.8], // São Gabriel da Cachoeira
-  [1.6, -65.5],
-  [2.5, -64.0],
-  [3.5, -62.5],
-  [4.0, -60.7], // Roraima
-  [4.5, -60.0], // Pacaraima (extremo NORTE)
-  [4.0, -59.0],
-  [3.6, -58.5], // Tripé Brasil-Venezuela-Guiana
-  [3.0, -56.0],
-  [2.0, -54.5],
-  [3.5, -53.5],
-  [4.5, -51.6], // fecha em Cabo Orange
-];
+  const arcs = useMemo(() => {
+    const valid = stages.filter((s) => s.lat !== null && s.lon !== null);
+    return valid.slice(0, -1).map((from, i) => {
+      const to = valid[i + 1];
+      const a = projectLatLon(from.lat as number, from.lon as number);
+      const b = projectLatLon(to.lat as number, to.lon as number);
+      // Auto-toggle de curvatura pra alternar lados — evita arcos sobrepostos
+      const curvature = i % 2 === 0 ? 0.22 : -0.18;
+      return {
+        id: `${from.id}-${to.id}`,
+        d: buildArcPath(a.x, a.y, b.x, b.y, curvature),
+        // Entrada após pinos: 1.2 + maxRound*0.08 + 0.1 + i*0.18
+        delay: 2.0 + i * 0.18,
+        // "concluído" se ambas as etapas já passaram
+        completed: from.status === "past" && to.status === "past",
+      };
+    });
+  }, [stages]);
 
-function buildSilhouettePath(): string {
-  const points = SILHOUETTE.map(([lat, lon]) => projectLatLon(lat, lon));
-  if (points.length === 0) return "";
-  const [first, ...rest] = points;
-  const cmds = [`M ${first.x.toFixed(1)} ${first.y.toFixed(1)}`];
-  for (const p of rest) {
-    cmds.push(`L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`);
-  }
-  cmds.push("Z");
-  return cmds.join(" ");
+  return (
+    <g aria-hidden="true">
+      {arcs.map((arc) => (
+        <motion.path
+          key={arc.id}
+          d={arc.d}
+          fill="none"
+          stroke={
+            arc.completed
+              ? "var(--racing-mute)"
+              : "var(--racing-blue-bright)"
+          }
+          strokeWidth={1.2}
+          strokeLinecap="round"
+          strokeDasharray="4 6"
+          opacity={arc.completed ? 0.35 : 0.6}
+          initial={
+            reduce
+              ? { pathLength: 1, opacity: arc.completed ? 0.35 : 0.6 }
+              : { pathLength: 0, opacity: 0 }
+          }
+          animate={{
+            pathLength: 1,
+            opacity: arc.completed ? 0.35 : 0.6,
+          }}
+          transition={
+            reduce
+              ? { duration: 0 }
+              : {
+                  pathLength: {
+                    duration: 0.8,
+                    ease: [0.65, 0, 0.35, 1],
+                    delay: arc.delay,
+                  },
+                  opacity: { duration: 0.4, delay: arc.delay },
+                }
+          }
+          style={{ pointerEvents: "none" }}
+        />
+      ))}
+    </g>
+  );
 }
 
 // ───────────────────────────────────────────────────────────────
@@ -143,26 +150,25 @@ const STATUS_VISUALS: Record<
   past: {
     fill: "var(--racing-mute)",
     stroke: "var(--racing-mute)",
-    size: 9,
+    size: 10,
     label: "Já realizada",
   },
   next: {
     fill: "var(--racing-red)",
     stroke: "var(--racing-red)",
-    size: 13,
+    size: 16,
     label: "Próxima etapa",
   },
   upcoming: {
     fill: "var(--racing-blue-bright)",
     stroke: "var(--racing-blue-bright)",
-    size: 10,
+    size: 13,
     label: "Etapa futura",
   },
-  // tbd não chega no mapa, mas o type pede a chave
   tbd: {
     fill: "var(--racing-mute)",
     stroke: "var(--racing-mute)",
-    size: 9,
+    size: 10,
     label: "A definir",
   },
 };
@@ -177,12 +183,7 @@ function clusterAriaLabel(cluster: StageCluster, status: StageStatus): string {
   }. ${rounds}. ${statusLabel}.`;
 }
 
-type PinProps = {
-  cluster: StageCluster;
-  scale: number;
-};
-
-function Pin({ cluster, scale }: PinProps) {
+function Pin({ cluster, scale }: { cluster: StageCluster; scale: number }) {
   const reduce = useReducedMotion();
   const { setHoveredId, setActiveId, isHighlighted } = useTemporada();
   const status = clusterStatus(cluster);
@@ -190,29 +191,65 @@ function Pin({ cluster, scale }: PinProps) {
 
   const { x, y } = projectLatLon(cluster.lat, cluster.lon);
   const radius = visual.size * scale;
-  const primaryStage = cluster.stages.find((s) => s.status === "next") ?? cluster.stages[0];
+  const primaryStage =
+    cluster.stages.find((s) => s.status === "next") ?? cluster.stages[0];
   const isClusterMulti = cluster.stages.length > 1;
   const highlighted = cluster.stages.some((s) => isHighlighted(s.id));
 
   return (
-    <g
+    <motion.g
       transform={`translate(${x}, ${y})`}
-      style={{ cursor: "pointer" }}
       onMouseEnter={() => setHoveredId(primaryStage.id)}
       onMouseLeave={() => setHoveredId(null)}
       onFocus={() => setHoveredId(primaryStage.id)}
       onBlur={() => setHoveredId(null)}
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={
+        reduce
+          ? { duration: 0 }
+          : {
+              type: "spring",
+              stiffness: 320,
+              damping: 22,
+              delay: 1.2 + cluster.stages[0].round * 0.08,
+            }
+      }
+      style={{
+        cursor: "pointer",
+        transformOrigin: "center",
+        transformBox: "fill-box",
+      }}
     >
-      {/* Ring pulsante para a próxima etapa (CSS animation no globals.css) */}
+      {/* Drop shadow soft — destaca o pino sobre o fill colorido do estado */}
+      <circle
+        cx={0}
+        cy={2}
+        r={radius + 2}
+        fill="oklch(0.05 0 0)"
+        opacity={0.55}
+        style={{ filter: "blur(3px)" }}
+      />
+
+      {/* Anel base branco — separa o pino do estado */}
+      <circle
+        cx={0}
+        cy={0}
+        r={radius + 3}
+        fill="oklch(0.97 0 0)"
+        opacity={0.95}
+      />
+
+      {/* Ring pulsante para a próxima etapa */}
       {status === "next" && !reduce ? (
         <circle
           cx={0}
           cy={0}
-          r={radius + 6}
+          r={radius + 8}
           fill="none"
           stroke={visual.stroke}
-          strokeWidth={1.5}
-          opacity={0.8}
+          strokeWidth={2}
+          opacity={0.9}
           style={{
             animation: "pin-pulse 1.8s ease-out infinite",
             transformOrigin: "center",
@@ -225,11 +262,11 @@ function Pin({ cluster, scale }: PinProps) {
         <circle
           cx={0}
           cy={0}
-          r={radius + 10}
+          r={radius + 12}
           fill="none"
           stroke="var(--racing-white)"
-          strokeWidth={1.5}
-          opacity={0.5}
+          strokeWidth={2}
+          opacity={0.7}
         />
       ) : null}
 
@@ -239,23 +276,11 @@ function Pin({ cluster, scale }: PinProps) {
         cy={0}
         r={radius}
         fill={visual.fill}
-        animate={highlighted ? { scale: 1.15 } : { scale: 1 }}
+        animate={highlighted ? { scale: 1.18 } : { scale: 1 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
         style={{ transformOrigin: "center", transformBox: "fill-box" }}
       />
 
-      {/* Anel branco fino */}
-      <circle
-        cx={0}
-        cy={0}
-        r={radius}
-        fill="none"
-        stroke="var(--racing-white)"
-        strokeWidth={1.5}
-        opacity={0.9}
-      />
-
-      {/* Round number (visível só nos pinos maiores) */}
       {radius >= 11 ? (
         <text
           x={0}
@@ -271,7 +296,6 @@ function Pin({ cluster, scale }: PinProps) {
         </text>
       ) : null}
 
-      {/* Badge de cluster ×N */}
       {isClusterMulti ? (
         <g transform={`translate(${radius * 0.85}, ${-radius * 0.95})`}>
           <circle
@@ -293,7 +317,6 @@ function Pin({ cluster, scale }: PinProps) {
         </g>
       ) : null}
 
-      {/* Botão clicável invisível por cima — pra a11y e click target */}
       <circle
         cx={0}
         cy={0}
@@ -312,12 +335,187 @@ function Pin({ cluster, scale }: PinProps) {
         }}
         style={{ outline: "none" }}
       />
-    </g>
+    </motion.g>
   );
 }
 
 // ───────────────────────────────────────────────────────────────
-// Mapa
+// Estado individual
+// ───────────────────────────────────────────────────────────────
+
+const STATE_FILL_BY_STATUS: Record<StageStatus, string> = {
+  past: "oklch(0.28 0.05 258 / 0.55)",
+  next: "oklch(0.45 0.18 28 / 0.30)",
+  upcoming: "oklch(0.40 0.14 254 / 0.40)",
+  tbd: "oklch(0.28 0.05 258 / 0.40)",
+};
+
+const STATE_FILL_ACTIVE_BY_STATUS: Record<StageStatus, string> = {
+  past: "oklch(0.32 0.07 258 / 0.75)",
+  next: "oklch(0.55 0.22 28 / 0.55)",
+  upcoming: "oklch(0.50 0.18 254 / 0.65)",
+  tbd: "oklch(0.30 0.06 258 / 0.65)",
+};
+
+const STATE_DEFAULT_FILL = "oklch(0.22 0.05 258 / 0.55)";
+const STATE_DEFAULT_FILL_ACTIVE = "oklch(0.28 0.07 258 / 0.75)";
+
+const labelVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 0.18 },
+};
+
+type StateLayerProps = {
+  state: BrazilStateGeometry;
+  index: number;
+  status: StageStatus | null;
+  hostStages: StageWithStatus[];
+  onStateClick: (uf: string) => void;
+};
+
+function StateLayer({
+  state,
+  index,
+  status,
+  hostStages,
+  onStateClick,
+}: StateLayerProps) {
+  const reduce = useReducedMotion();
+  const { hoveredStateUf, setHoveredStateUf, isHighlighted } = useTemporada();
+  const isHost = status !== null;
+  const isHovered = hoveredStateUf === state.uf;
+  const isStageHighlighted = hostStages.some((s) => isHighlighted(s.id));
+  const active = isHovered || isStageHighlighted;
+
+  const restFill = isHost
+    ? STATE_FILL_BY_STATUS[status]
+    : STATE_DEFAULT_FILL;
+  const activeFill = isHost
+    ? STATE_FILL_ACTIVE_BY_STATUS[status]
+    : STATE_DEFAULT_FILL_ACTIVE;
+  const currentFill = active ? activeFill : restFill;
+
+  // Tamanho do label adapta ao bbox do estado pra estados pequenos não
+  // cuspirem texto fora da silhueta. Limite: max 14, min 7.
+  const minSide = Math.min(state.bbox.w, state.bbox.h);
+  const labelSize = Math.max(7, Math.min(14, minSide * 0.22));
+
+  // Stagger de entrada: norte → sul (BRAZIL_STATES já vem ordenado).
+  const enterDelay = reduce ? 0 : 0.15 + index * 0.025;
+
+  return (
+    <motion.g
+      onMouseEnter={() => setHoveredStateUf(state.uf)}
+      onMouseLeave={() => setHoveredStateUf(null)}
+      onFocus={() => setHoveredStateUf(state.uf)}
+      onBlur={() => setHoveredStateUf(null)}
+      style={{ cursor: isHost ? "pointer" : "default" }}
+    >
+      {/* Path do estado — preenchimento + borda animada */}
+      <motion.path
+        d={state.path}
+        animate={{
+          fill: currentFill,
+          stroke: active
+            ? "var(--racing-white)"
+            : isHost
+            ? "oklch(0.62 0.20 252 / 0.55)"
+            : "oklch(1 0 0 / 0.10)",
+          strokeWidth: active ? 1.4 : isHost ? 1 : 0.7,
+          opacity: 1,
+          pathLength: 1,
+        }}
+        initial={
+          reduce
+            ? { opacity: 0, pathLength: 1, fill: restFill }
+            : { opacity: 0, pathLength: 0, fill: restFill }
+        }
+        transition={{
+          opacity: { duration: 0.4, delay: enterDelay },
+          pathLength: reduce
+            ? { duration: 0 }
+            : {
+                duration: 0.9,
+                ease: [0.65, 0, 0.35, 1],
+                delay: enterDelay,
+              },
+          fill: { duration: 0.25 },
+          stroke: { duration: 0.2 },
+          strokeWidth: { duration: 0.2 },
+        }}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        style={{ willChange: "opacity, fill, stroke" }}
+        role={isHost ? "button" : "presentation"}
+        tabIndex={isHost ? 0 : -1}
+        aria-label={
+          isHost
+            ? `${state.name}, ${state.uf}. ${
+                hostStages.length === 1
+                  ? `Etapa ${hostStages[0].round} em ${hostStages[0].longDate}.`
+                  : `${hostStages.length} etapas: ${hostStages
+                      .map((s) => `etapa ${s.round} em ${s.longDate}`)
+                      .join("; ")}.`
+              }`
+            : undefined
+        }
+        onClick={() => onStateClick(state.uf)}
+        onKeyDown={(e) => {
+          if (isHost && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            onStateClick(state.uf);
+          }
+        }}
+      />
+
+      {/* Glow extra para estados-anfitriões em hover/highlight */}
+      {isHost && active ? (
+        <motion.path
+          d={state.path}
+          fill="none"
+          stroke={
+            status === "next"
+              ? "var(--racing-red)"
+              : "var(--racing-blue-bright)"
+          }
+          strokeWidth={1.8}
+          strokeLinejoin="round"
+          opacity={0.7}
+          style={{ filter: "blur(2.5px)" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.7 }}
+          transition={{ duration: 0.25 }}
+          pointerEvents="none"
+        />
+      ) : null}
+
+      {/* Sigla UF — discreta no centroide */}
+      <motion.text
+        x={state.centroid.x}
+        y={state.centroid.y}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        className="select-none font-mono"
+        fontSize={labelSize}
+        fontWeight={700}
+        fill="var(--racing-white)"
+        style={{ letterSpacing: "0.1em", pointerEvents: "none" }}
+        initial="hidden"
+        animate={active ? { opacity: 0.9 } : "visible"}
+        variants={reduce ? undefined : labelVariants}
+        transition={{
+          duration: 0.4,
+          delay: reduce ? 0 : enterDelay + 0.5,
+        }}
+      >
+        {state.uf}
+      </motion.text>
+    </motion.g>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────
+// Mapa principal
 // ───────────────────────────────────────────────────────────────
 
 type Props = {
@@ -325,23 +523,41 @@ type Props = {
 };
 
 export function TemporadaMap({ stages }: Props) {
-  const silhouettePath = useMemo(() => buildSilhouettePath(), []);
-  const clusters = useMemo(() => groupClusters(stages), [stages]);
+  const reduce = useReducedMotion();
+  const { setActiveId } = useTemporada();
+  const [emptyStateFlash, setEmptyStateFlash] = useState<string | null>(null);
 
-  // Scale aplicado nos pinos. O viewBox é responsivo via CSS,
-  // então o scale serve só pra ajuste fino de proporção.
-  const pinScale = 1;
+  const clusters = useMemo(() => groupClusters(stages), [stages]);
+  const byState = useMemo(() => groupByState(stages), [stages]);
+
+  const handleStateClick = (uf: string) => {
+    const list = byState.get(uf);
+    if (list && list.length > 0) {
+      // Prioriza a próxima etapa, se houver
+      const target =
+        list.find((s) => s.status === "next") ??
+        list.find((s) => s.status === "upcoming") ??
+        list[0];
+      setActiveId(target.id);
+    }
+  };
+
+  // Auto-clear do flash "sem etapa"
+  useEffect(() => {
+    if (!emptyStateFlash) return;
+    const t = setTimeout(() => setEmptyStateFlash(null), 1800);
+    return () => clearTimeout(t);
+  }, [emptyStateFlash]);
 
   return (
     <div className="relative">
       <svg
         viewBox={`0 0 ${SVG_VIEWBOX.width} ${SVG_VIEWBOX.height}`}
         role="img"
-        aria-label="Mapa do Brasil com 8 etapas do Moto1000GP 2026"
+        aria-label="Mapa do Brasil com 27 estados e 8 etapas do Moto1000GP 2026"
         className="h-auto w-full"
         preserveAspectRatio="xMidYMid meet"
       >
-        {/* Grid sutil ao fundo (linhas verticais) */}
         <defs>
           <pattern
             id="temporada-grid"
@@ -359,9 +575,15 @@ export function TemporadaMap({ stages }: Props) {
           </pattern>
 
           <radialGradient id="temporada-glow" cx="50%" cy="55%" r="55%">
-            <stop offset="0%" stopColor="var(--racing-blue)" stopOpacity={0.25} />
+            <stop offset="0%" stopColor="var(--racing-blue)" stopOpacity={0.3} />
             <stop offset="100%" stopColor="var(--racing-blue)" stopOpacity={0} />
           </radialGradient>
+
+          <linearGradient id="temporada-scanline" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--racing-blue-bright)" stopOpacity={0} />
+            <stop offset="50%" stopColor="var(--racing-blue-bright)" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="var(--racing-blue-bright)" stopOpacity={0} />
+          </linearGradient>
         </defs>
 
         <rect
@@ -370,34 +592,87 @@ export function TemporadaMap({ stages }: Props) {
           fill="url(#temporada-grid)"
         />
 
-        {/* Glow radial atrás do continente */}
         <rect
           width={SVG_VIEWBOX.width}
           height={SVG_VIEWBOX.height}
           fill="url(#temporada-glow)"
         />
 
-        {/* Silhueta do Brasil */}
-        <path
-          d={silhouettePath}
-          fill="oklch(0.28 0.12 254 / 0.18)"
-          stroke="var(--racing-blue-bright)"
-          strokeWidth={1.5}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
+        {/* Scanline radar — passa de cima a baixo continuamente */}
+        {!reduce ? (
+          <motion.rect
+            x={0}
+            width={SVG_VIEWBOX.width}
+            height={120}
+            fill="url(#temporada-scanline)"
+            opacity={0.6}
+            initial={{ y: -120 }}
+            animate={{ y: SVG_VIEWBOX.height }}
+            transition={{
+              duration: 5.2,
+              ease: "linear",
+              repeat: Infinity,
+              repeatDelay: 2,
+              delay: 2.5,
+            }}
+            style={{ pointerEvents: "none" }}
+          />
+        ) : null}
 
-        {/* Pinos */}
+        {/* 27 estados */}
+        <g aria-label="Estados">
+          {BRAZIL_STATES.map((state, index) => {
+            const status = stateStatus(state.uf, byState);
+            const hostStages = byState.get(state.uf) ?? [];
+            return (
+              <StateLayer
+                key={state.uf}
+                state={state}
+                index={index}
+                status={status}
+                hostStages={hostStages}
+                onStateClick={(uf) => {
+                  if (byState.has(uf)) {
+                    handleStateClick(uf);
+                  } else {
+                    setEmptyStateFlash(uf);
+                  }
+                }}
+              />
+            );
+          })}
+        </g>
+
+        {/* Arcos de trajetória — round 1 → 2 → ... → 8 */}
+        <TrajectoryArcs stages={stages} />
+
+        {/* Pinos sobre os estados */}
         <g aria-label="Etapas">
           {clusters.map((cluster) => (
-            <Pin key={cluster.id} cluster={cluster} scale={pinScale} />
+            <Pin key={cluster.id} cluster={cluster} scale={1} />
           ))}
         </g>
       </svg>
 
+      {/* Toast micro-feedback ao clicar em estado vazio */}
+      <AnimatePresence>
+        {emptyStateFlash ? (
+          <motion.p
+            key={emptyStateFlash}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="pointer-events-none absolute inset-x-0 bottom-0 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-racing-mute"
+          >
+            {emptyStateFlash} · sem etapa em 2026
+          </motion.p>
+        ) : null}
+      </AnimatePresence>
+
       <p className="sr-only">
-        Mapa estilizado do Brasil com pinos para cada uma das 8 etapas do
-        calendário Moto1000GP 2026.
+        Mapa do Brasil dividido em 27 estados, com pinos para cada uma das 8
+        etapas do calendário Moto1000GP 2026.
       </p>
     </div>
   );
