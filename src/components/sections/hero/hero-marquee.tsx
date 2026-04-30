@@ -84,7 +84,7 @@ export function HeroMarquee() {
           duration: skipAll ? 0.01 : 0.7,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="overflow-hidden border-y border-white/[0.06] bg-racing-blue-deep/40 py-4 backdrop-blur-sm"
+        className="overflow-hidden border-y border-white/[0.06] bg-racing-blue-deep/72 py-4"
       >
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-racing-blue-deep to-transparent sm:w-32" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-racing-blue-deep to-transparent sm:w-32" />
