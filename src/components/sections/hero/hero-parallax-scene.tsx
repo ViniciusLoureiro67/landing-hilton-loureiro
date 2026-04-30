@@ -156,10 +156,9 @@ export function HeroParallaxScene() {
               : { delay: 3.55, duration: 1.1, ease: [0.16, 1, 0.3, 1] }
           }
         >
-          {/* 7 — outline em azul-bright forte, com slash vermelho diagonal
-              atravessando (assinatura do logo HILTON76). Stroke grosso
-              compete com a foto/overlay sem text-shadow (era paint
-              extremamente caro em texto desse tamanho). */}
+          {/* 7 — outline em azul-bright forte. Stroke grosso compete com
+              a foto/overlay sem text-shadow (era paint extremamente caro
+              em texto desse tamanho). */}
           <span
             aria-hidden
             className="font-display leading-[0.78] tracking-[-0.04em]"
@@ -171,16 +170,6 @@ export function HeroParallaxScene() {
           >
             7
           </span>
-          {/* Slash diagonal vermelho — atravessa o "7", elemento gráfico
-              dominante. Posição percentual relativa ao bbox do "7". */}
-          <span
-            aria-hidden
-            className="absolute left-[42%] top-[2%] h-[96%] w-[14px] origin-center rotate-[18deg] bg-racing-red sm:w-[20px] lg:w-[28px]"
-            style={{
-              boxShadow:
-                "0 0 24px 2px oklch(0.58 0.23 27 / 0.45)",
-            }}
-          />
           {/* 6 — sólido em vermelho (acento dominante). Sem drop-shadow
               (era paint pesado em texto desse tamanho); o overlay já
               segura contraste. */}
