@@ -1,40 +1,36 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { useRef } from "react";
 
 /**
- * SobreBackdrop — backdrop fixo da seção Sobre, com 76 gigantesco que
- * faz parallax e morpha de escala/opacidade conforme o scroll.
+ * SobreBackdrop — backdrop fixo da seção Sobre, com totem tipográfico.
  *
- * Implementação:
- * - Container `position: absolute inset-0` cobrindo toda a section.
- * - 76 com `position: sticky top-1/2` pra ficar "preso" verticalmente
- *   enquanto a section rola atrás dele — efeito de parallax sem usar
- *   `background-attachment` (que tem bugs no iOS).
- * - `useScroll` no parent rastreia 0..1 do progresso do scroll DA SEÇÃO,
- *   e disso derivamos translação horizontal, escala e opacidade.
+ * Composição vertical (descobre-se conforme o usuário scrolla a seção):
  *
- * Reduced-motion: estático, opacidade ~3%, sem transformação.
+ *   topo da section ─────────────────────────────
+ *                            ┊
+ *                          ╔═══╗
+ *                          ║76 ║   ← centro (50%)
+ *                          ╚═══╝
+ *                            ┊
+ *                        HILTON       ← ~75% (durante a Timeline,
+ *                       LOUREIRO         depois do 76 sair do viewport)
+ *                            ┊
+ *   fim da section ──────────────────────────────
+ *
+ * Tudo em `position: absolute` dentro do container que cobre `inset:0` da
+ * section. Como a section é alta (~500vh por causa do `SobreTimeline`
+ * 300vh), os elementos ficam distribuídos verticalmente e cada um aparece
+ * no viewport em momentos diferentes do scroll.
+ *
+ * Estilo: display font, uppercase, alpha baixíssimo (white/0.04-0.05) —
+ * funcionam como textura de fundo, não como elementos de leitura.
+ *
+ * Estático de propósito: esta seção já possui várias entradas animadas, então
+ * o fundo não precisa consumir scroll updates contínuos.
  */
 export function SobreBackdrop() {
   const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-
-  // 76 entra grande à direita, vem pro centro, e sai pra esquerda
-  const x = useTransform(scrollYProgress, [0, 1], ["10vw", "-30vw"]);
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.85, 1.1, 0.95]);
-  const opacity = useTransform(
-    scrollYProgress,
-    [0, 0.15, 0.85, 1],
-    [0.025, 0.06, 0.06, 0.02]
-  );
 
   return (
     <div
@@ -42,31 +38,47 @@ export function SobreBackdrop() {
       aria-hidden
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
-      <motion.span
-        className="absolute left-1/2 top-1/2 select-none font-display leading-[0.78] tracking-[-0.04em] text-racing-white"
-        style={
-          reduce
-            ? {
-                fontSize: "clamp(18rem, 35vw, 45rem)",
-                color: "oklch(1 0 0 / 0.03)",
-                transform: "translate(-50%, -50%)",
-                position: "sticky",
-                top: "50%",
-              }
-            : {
-                fontSize: "clamp(18rem, 35vw, 45rem)",
-                position: "sticky",
-                top: "50%",
-                x,
-                scale,
-                opacity,
-                translateY: "-50%",
-                willChange: "transform, opacity",
-              }
-        }
+      {/* "76" gigante — centro vertical da section */}
+      <span
+        className="absolute left-1/2 top-1/2 select-none font-display leading-[0.78] tracking-[-0.04em] text-racing-white/[0.05]"
+        style={{
+          fontSize: "clamp(18rem, 35vw, 45rem)",
+          transform: "translate(-50%, -50%)",
+        }}
       >
         76
-      </motion.span>
+      </span>
+
+      {/* "HILTON LOUREIRO" empilhado em 2 linhas — preenche o espaço de
+          scroll após o 76 sair do viewport, durante a SobreTimeline.
+          Posicionado em ~76% da section pra cair entre o final visível
+          do 76 e o fim do scroll.
+
+          `leading-[0.95]`: o 76 usa `leading-[0.78]` por ser linha única,
+          mas pra empilhamento real precisa de >= 0.9 senão os caps da
+          linha de cima colidem com os caps da linha de baixo (uppercase
+          praticamente preenche o em-square inteiro). 0.95 dá respiro
+          mínimo sem afastar demais — ainda parece totem denso. */}
+      <div
+        className="absolute left-1/2 select-none whitespace-nowrap text-center"
+        style={{
+          top: "76%",
+          transform: "translate(-50%, -50%)",
+        }}
+      >
+        <span
+          className="block font-display uppercase leading-[0.95] tracking-[-0.03em] text-racing-white/[0.05]"
+          style={{ fontSize: "clamp(5.5rem, 13vw, 17rem)" }}
+        >
+          Hilton
+        </span>
+        <span
+          className="block font-display uppercase leading-[0.95] tracking-[-0.03em] text-racing-white/[0.04]"
+          style={{ fontSize: "clamp(5.5rem, 13vw, 17rem)" }}
+        >
+          Loureiro
+        </span>
+      </div>
 
       {/* Speedlines diagonais sutis — reforço editorial */}
       <div
