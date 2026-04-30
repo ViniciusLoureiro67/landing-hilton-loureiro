@@ -10,20 +10,25 @@ import {
 } from "react";
 
 /**
- * Contexto local da seção Temporada.
+ * Contexto local da seção Temporada — sincroniza highlight entre mapa e lista.
  *
- * - `hoveredId`: cursor sobre pino do mapa OU sobre card da lista
- * - `activeId`: card centralizado pelo scrollytelling (ou clique em pino)
+ * Estados:
+ *   - `hoveredId`: cursor sobre pino do mapa OU sobre card da lista
+ *   - `activeId`: card centralizado pelo scrollytelling (ou clique em pino/estado)
+ *   - `hoveredStateUf`: cursor sobre um estado do mapa — usado para destacar
+ *     o estado em si E o(s) card(s) anfitrião(es)
  *
- * Visual: o "destaque" é o OR dos dois (qualquer um dispara highlight).
- * Semântica: `aria-current="step"` continua só na próxima etapa real
- * (não nesse highlight de UX).
+ * Visual: o "destaque" do card é o OR dos três (qualquer um dispara highlight).
+ * Semântica: `aria-current="step"` continua só na próxima etapa real, não nesse
+ * highlight de UX.
  */
 type TemporadaContextValue = {
   hoveredId: string | null;
   activeId: string | null;
+  hoveredStateUf: string | null;
   setHoveredId: (id: string | null) => void;
   setActiveId: (id: string | null) => void;
+  setHoveredStateUf: (uf: string | null) => void;
   /** Helper: retorna `true` se este id é o destacado no momento. */
   isHighlighted: (id: string) => boolean;
 };
@@ -33,6 +38,9 @@ const TemporadaContext = createContext<TemporadaContextValue | null>(null);
 export function TemporadaProvider({ children }: { children: ReactNode }) {
   const [hoveredId, setHoveredIdState] = useState<string | null>(null);
   const [activeId, setActiveIdState] = useState<string | null>(null);
+  const [hoveredStateUf, setHoveredStateUfState] = useState<string | null>(
+    null
+  );
 
   const setHoveredId = useCallback((id: string | null) => {
     setHoveredIdState(id);
@@ -42,15 +50,28 @@ export function TemporadaProvider({ children }: { children: ReactNode }) {
     setActiveIdState(id);
   }, []);
 
+  const setHoveredStateUf = useCallback((uf: string | null) => {
+    setHoveredStateUfState(uf);
+  }, []);
+
   const value = useMemo<TemporadaContextValue>(
     () => ({
       hoveredId,
       activeId,
+      hoveredStateUf,
       setHoveredId,
       setActiveId,
+      setHoveredStateUf,
       isHighlighted: (id) => hoveredId === id || activeId === id,
     }),
-    [hoveredId, activeId, setHoveredId, setActiveId]
+    [
+      hoveredId,
+      activeId,
+      hoveredStateUf,
+      setHoveredId,
+      setActiveId,
+      setHoveredStateUf,
+    ]
   );
 
   return (

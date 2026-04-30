@@ -312,3 +312,47 @@ export function clusterStatus(cluster: StageCluster): StageStatus {
   if (cluster.stages.some((s) => s.status === "upcoming")) return "upcoming";
   return "past";
 }
+
+// ───────────────────────────────────────────────────────────────
+// Mapa UF → etapas
+// ───────────────────────────────────────────────────────────────
+
+/**
+ * Agrupa as etapas por sigla UF — usado pra colorir estados-anfitriões no
+ * mapa e responder ao click em qualquer parte do estado.
+ *
+ * Etapas com `state === "—"` (TBD) não entram no mapa.
+ */
+export function groupByState(
+  stages: StageWithStatus[]
+): Map<string, StageWithStatus[]> {
+  const map = new Map<string, StageWithStatus[]>();
+  for (const s of stages) {
+    if (s.state === "—") continue;
+    const list = map.get(s.state);
+    if (list) {
+      list.push(s);
+    } else {
+      map.set(s.state, [s]);
+    }
+  }
+  for (const list of map.values()) {
+    list.sort((a, b) => a.round - b.round);
+  }
+  return map;
+}
+
+/**
+ * Status agregado para um estado anfitrião — mesma prioridade do cluster.
+ * Estados sem etapa retornam `null`.
+ */
+export function stateStatus(
+  uf: string,
+  byState: Map<string, StageWithStatus[]>
+): StageStatus | null {
+  const list = byState.get(uf);
+  if (!list || list.length === 0) return null;
+  if (list.some((s) => s.status === "next")) return "next";
+  if (list.some((s) => s.status === "upcoming")) return "upcoming";
+  return "past";
+}
