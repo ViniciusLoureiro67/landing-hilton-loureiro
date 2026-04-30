@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { TemporadaStageCard } from "./temporada-stage-card";
 import { useTemporada } from "./temporada-context";
 import type { StageWithStatus } from "./temporada-data";

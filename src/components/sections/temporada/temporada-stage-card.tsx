@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
+import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StageWithStatus } from "./temporada-data";
