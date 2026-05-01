@@ -28,7 +28,7 @@ type Props = {
   revealFrom: "left" | "right";
 };
 
-export function GaleriaCard({ photo, index, revealFrom: _revealFrom }: Props) {
+export function GaleriaCard({ photo, index, revealFrom: _revealFrom }: Readonly<Props>) {
   const reduce = useReducedMotion();
   // Ref tipada como HTMLElement (figure é HTMLElement).
   const ref = useRef<HTMLElement>(null);
@@ -112,7 +112,6 @@ export function GaleriaCard({ photo, index, revealFrom: _revealFrom }: Props) {
               objectFit: "cover",
               objectPosition: photo.objectPosition ?? "center",
             }}
-            priority={index < 2}
           />
         </motion.div>
       </motion.div>
@@ -126,7 +125,7 @@ export function GaleriaCard({ photo, index, revealFrom: _revealFrom }: Props) {
       {/* Tint sutil pra unificar paleta entre fotos com tons diferentes. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-racing-blue-deep/10 mix-blend-multiply"
+        className="pointer-events-none absolute inset-0 bg-racing-blue-deep/10"
       />
 
       {/* Corner brackets — viram vermelhos no hover. */}
