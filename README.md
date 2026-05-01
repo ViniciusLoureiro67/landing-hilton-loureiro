@@ -18,12 +18,12 @@ Next.js 16 (App Router · Turbopack · src dir) · React 19 · TypeScript · Tai
 |---|---|---|
 | S1 | Foundation — tokens, fontes, layout, navbar, footer, smooth scroll | ✅ no `main` |
 | S2 | Hero — ignição F1 + clip-path reveal + 76 protagonista + parallax + marquee | ✅ [PR #1](https://github.com/ViniciusLoureiro67/landing-hilton-loureiro/pull/1) |
-| S3 | Sobre + Palmarés — bio + timeline visual 16→25 | ⏳ próximo |
-| S4 | Temporada 2026 — mapa do Brasil + 8 etapas | ⏳ |
-| S5 | Galeria — grid editorial + lightbox | ⏳ |
-| S6 | Patrocínio — pilares + propriedades + CTA forte | ⏳ |
-| S7 | Marcas + Imprensa — logos + contato + press kit | ⏳ |
-| S8 | Polish — Sonic Konami, audit a11y/perf, OG image, JSON-LD | ⏳ |
+| S3 | Sobre + Palmarés — bio + timeline horizontal scroll-locked (vertical em <md) | ✅ |
+| S4 | Temporada 2026 — mapa do Brasil + 8 etapas + circuit cards com popover | ✅ |
+| S5 | Patrocínio — pitch + stats + 7 ativações com foto editorial + LED line zigue-zague | ✅ [PR #5](https://github.com/ViniciusLoureiro67/landing-hilton-loureiro/pull/5) |
+| S6 | Galeria + Contato + responsividade — grid editorial asymétrico, char-reveal, form WhatsApp + press kit | ✅ [PR #6](https://github.com/ViniciusLoureiro67/landing-hilton-loureiro/pull/6) |
+| S7 | OG image + favicon cleanup — `next/og` 1200×630 com photo + brand stack | ✅ [PR #7](https://github.com/ViniciusLoureiro67/landing-hilton-loureiro/pull/7) |
+| S8 | Polish + créditos — footer com link WhatsApp do dev | ✅ [PR #8](https://github.com/ViniciusLoureiro67/landing-hilton-loureiro/pull/8) |
 
 Detalhamento de cada sprint em [`tasks/00-brief.md`](./tasks/00-brief.md).
 
@@ -102,15 +102,38 @@ Variáveis de ambiente: configurar `NEXT_PUBLIC_SITE_URL` no Vercel para a URL c
 
 ```
 src/
-  app/                        # rotas, layout global, tokens
+  app/
+    layout.tsx                # metadata SEO, fontes, providers
+    page.tsx                  # composição das 6 seções + dividers
+    icon.tsx                  # favicon dinâmico via next/og
+    apple-icon.tsx            # apple touch icon 180×180
+    opengraph-image.tsx       # OG image 1200×630 (preview WhatsApp/Twitter)
+    globals.css               # tokens em @theme + utilitários
   components/
-    sections/<seção>/         # padrão: server index.tsx + clients pequenos + hooks locais
+    sections/
+      hero/                   # ignição F1, name reveal, parallax, marquee
+      sobre/                  # bio + timeline scroll-locked
+      temporada/              # mapa BR + 8 etapas + circuit cards
+      patrocinio/             # pitch + stats + 7 ativações + sponsors + CTA
+      galeria/                # grid editorial asymétrico (6 cards)
+      contato/                # form WhatsApp + canais + press kit
+    motion/
+      char-reveal.tsx         # text reveal char-by-char
+      scroll-video.tsx        # scroll-driven video (não usado atualmente)
+      section-divider.tsx     # ticker / slash entre seções
     ui/                       # shadcn primitives
-    Navbar.tsx, Footer.tsx, Hilton76Logo.tsx
+    Navbar.tsx, Footer.tsx, SmoothScrollProvider.tsx, Hilton76Logo.tsx
   lib/
-    links.ts                  # WhatsApp/Instagram/Email centralizados
+    links.ts                  # WhatsApp/Instagram/Email + builder de wa.me
     utils.ts                  # cn() helper
-public/photos/                # 5 fotos placeholder (01–05)
+    use-reduced-motion-safe.ts
+public/
+  photos/
+    ativacoes/                # 7 fotos das ativações de patrocínio
+    galeria/                  # 6 fotos da galeria editorial
+  press/
+    hilton76-press-kit.pdf    # press kit comprimido (~7 MB)
+  sponsors/                   # logos dos patrocinadores
 docs/                         # quality bar e docs persistentes
 tasks/                        # brief + plans de sprints
 .claude/                      # subagents, slash commands, settings
