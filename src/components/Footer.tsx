@@ -96,6 +96,17 @@ export function Footer() {
       <div className="relative border-t border-white/5">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs text-racing-mute sm:flex-row sm:px-6 lg:px-8">
           <span>© {new Date().getFullYear()} Hilton Loureiro · Todos os direitos reservados.</span>
+
+          <span className="text-center">
+            Feito por Vinicius Soares Loureiro ·{" "}
+            <a
+              href="tel:+5582993060696"
+              className="transition-colors hover:text-racing-blue-bright"
+            >
+              (82) 99306-0696
+            </a>
+          </span>
+
           <span className="font-mono uppercase tracking-widest">#76 · pt-BR</span>
         </div>
       </div>
