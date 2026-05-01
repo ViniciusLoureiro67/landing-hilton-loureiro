@@ -41,7 +41,7 @@ export function HeroTagline() {
         Endurance{" "}
         <span className="font-mono text-racing-yellow">600cc</span>.
         <br className="hidden sm:block" />
-        Em 2026 defende o título pela equipe{" "}
+        Em 2026, corre pela equipe{" "}
         <span className="text-racing-yellow">NRT</span>.
       </p>
     </motion.div>
