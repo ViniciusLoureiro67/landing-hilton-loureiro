@@ -30,6 +30,7 @@ export const PATROCINIO_COPY = {
     {
       name: "Garagem 57",
       logoSrc: "/sponsors/garagem-57.svg",
+      href: "https://www.instagram.com/garagem57mcz/",
       // Wordmark sem bandeira: viewBox cropado 1740×220, aspect ~7.9
       aspect: 1740 / 220,
       widthPct: 90,
@@ -37,6 +38,7 @@ export const PATROCINIO_COPY = {
     {
       name: "Formafit",
       logoSrc: "/sponsors/formafit-clean.png",
+      href: "https://www.instagram.com/formafitmaceio/",
       // Portrait — limite de altura é o constraint (não largura)
       aspect: 495 / 616,
       widthPct: 50,
@@ -44,6 +46,7 @@ export const PATROCINIO_COPY = {
     {
       name: "AC Vitha Clinic",
       logoSrc: "/sponsors/vitha-clinic.svg",
+      href: "https://www.instagram.com/draanaclaudialoureiro/",
       aspect: 740 / 502,
       // Letras "thin" elegantes — pode ser maior pra ter presença
       widthPct: 80,
@@ -51,6 +54,7 @@ export const PATROCINIO_COPY = {
     {
       name: "Brasil da Sorte",
       logoSrc: "/sponsors/brasil-da-sorte.svg",
+      href: "https://www.instagram.com/brasildasortebet/",
       aspect: 481.89 / 226.772,
       // Letras "thick" e "B" denso — não precisa ser tão grande
       widthPct: 78,
@@ -72,11 +76,29 @@ export type AtivacaoIcon =
   | "map-pin"
   | "clapperboard";
 
+export type AtivacaoPhoto = {
+  src: string;
+  alt: string;
+  /** Largura intrínseca (pra Next/Image evitar CLS). */
+  width: number;
+  height: number;
+  /**
+   * Aspect ratio do wrapper (CSS aspect-ratio). Permite cada foto ter
+   * crop específico. Ex: portraits → "3/4", landscapes → "4/3".
+   */
+  aspect: string;
+  /** object-position pra controlar o crop. Default "center". */
+  objectPosition?: string;
+  /** Texto exibido no canto inferior direito (etiqueta editorial). */
+  figLabel: string;
+};
+
 export type Ativacao = {
   index: string;
   icon: AtivacaoIcon;
   title: string;
   description: string;
+  photo: AtivacaoPhoto;
 };
 
 export const ATIVACOES: Ativacao[] = [
@@ -86,6 +108,15 @@ export const ATIVACOES: Ativacao[] = [
     title: "Capacete",
     description:
       "Slot premium em close de câmera no grid, na largada e na premiação. A peça mais filmada do fim de semana.",
+    photo: {
+      src: "/photos/ativacoes/01-capacete.jpg",
+      alt: "Close do capacete Sonic do Hilton Loureiro com visor levantado",
+      width: 1065,
+      height: 1600,
+      aspect: "3/4",
+      objectPosition: "center 30%",
+      figLabel: "FIG. 01 — CAPACETE",
+    },
   },
   {
     index: "02",
@@ -93,6 +124,15 @@ export const ATIVACOES: Ativacao[] = [
     title: "Macacão esportivo",
     description:
       "Logos no peito, ombro e costas. Pódio, entrevistas pós-corrida e foto oficial da equipe.",
+    photo: {
+      src: "/photos/ativacoes/02-macacao.jpg",
+      alt: "Hilton Loureiro com macacão completo numa curva, joelho no chão",
+      width: 1280,
+      height: 901,
+      aspect: "3/4",
+      objectPosition: "55% 50%",
+      figLabel: "FIG. 02 — MACACÃO",
+    },
   },
   {
     index: "03",
@@ -100,6 +140,15 @@ export const ATIVACOES: Ativacao[] = [
     title: "Carenagem da moto #76",
     description:
       "Adesivagem em carenagem, rabeta e sub-frame. Posições por cota e plano de mídia.",
+    photo: {
+      src: "/photos/ativacoes/03-carenagem-wheelie.jpg",
+      alt: "Hilton Loureiro empinando a moto Kawasaki #76 em pista",
+      width: 1080,
+      height: 720,
+      aspect: "3/4",
+      objectPosition: "55% 50%",
+      figLabel: "FIG. 03 — CARENAGEM",
+    },
   },
   {
     index: "04",
@@ -107,6 +156,15 @@ export const ATIVACOES: Ativacao[] = [
     title: "Transmissão ao vivo",
     description:
       "Visibilidade nos broadcasts oficiais das 8 etapas — TV aberta, canais esportivos e streaming.",
+    photo: {
+      src: "/photos/ativacoes/04-transmissao.jpg",
+      alt: "Hilton Loureiro no grid de largada com guarda-chuva da Moto1000GP",
+      width: 1066,
+      height: 1600,
+      aspect: "3/4",
+      objectPosition: "center 35%",
+      figLabel: "FIG. 04 — TRANSMISSÃO",
+    },
   },
   {
     index: "05",
@@ -114,6 +172,15 @@ export const ATIVACOES: Ativacao[] = [
     title: "Redes sociais",
     description:
       "Instagram do piloto + cobertura de bastidores em Reels e Stories durante toda a semana de corrida.",
+    photo: {
+      src: "/photos/ativacoes/05-redes-sociais.jpg",
+      alt: "Peça de redes sociais — Hilton Loureiro celebrando 2 mil seguidores",
+      width: 1080,
+      height: 1440,
+      aspect: "3/4",
+      objectPosition: "center top",
+      figLabel: "FIG. 05 — DIGITAL",
+    },
   },
   {
     index: "06",
@@ -121,6 +188,15 @@ export const ATIVACOES: Ativacao[] = [
     title: "Box e paddock",
     description:
       "Hospitalidade no box, ações com clientes e relacionamento com a imprensa em até 2 etapas/ano.",
+    photo: {
+      src: "/photos/ativacoes/06-box-paddock.jpg",
+      alt: "Hilton Loureiro no box em frente ao backdrop dos patrocinadores",
+      width: 1124,
+      height: 1600,
+      aspect: "3/4",
+      objectPosition: "center 25%",
+      figLabel: "FIG. 06 — PADDOCK",
+    },
   },
   {
     index: "07",
@@ -128,6 +204,15 @@ export const ATIVACOES: Ativacao[] = [
     title: "Conteúdo de bastidores",
     description:
       "Vídeos pós-corrida, entrevistas e foto-conteúdo editorial co-assinados com a marca patrocinadora.",
+    photo: {
+      src: "/photos/ativacoes/07-bastidores.jpg",
+      alt: "Hilton Loureiro de balaclava segurando o capacete antes de entrar em pista",
+      width: 1068,
+      height: 1600,
+      aspect: "3/4",
+      objectPosition: "center 30%",
+      figLabel: "FIG. 07 — BASTIDORES",
+    },
   },
 ];
 

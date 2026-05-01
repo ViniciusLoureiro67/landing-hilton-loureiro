@@ -498,6 +498,8 @@ function StateLayer({
     ? STATE_FILL_ACTIVE_BY_STATUS[status]
     : STATE_DEFAULT_FILL_ACTIVE;
   const currentFill = active ? activeFill : restFill;
+  const restStroke = stateStroke(false, isHost);
+  const restStrokeWidth = stateStrokeWidth(false, isHost);
 
   // Tamanho do label adapta ao bbox do estado pra estados pequenos não
   // cuspirem texto fora da silhueta. Limite: max 14, min 7.
@@ -533,8 +535,20 @@ function StateLayer({
         }}
         initial={
           reduce
-            ? { opacity: 0, pathLength: 1, fill: restFill }
-            : { opacity: 0, pathLength: 0, fill: restFill }
+            ? {
+                opacity: 0,
+                pathLength: 1,
+                fill: restFill,
+                stroke: restStroke,
+                strokeWidth: restStrokeWidth,
+              }
+            : {
+                opacity: 0,
+                pathLength: 0,
+                fill: restFill,
+                stroke: restStroke,
+                strokeWidth: restStrokeWidth,
+              }
         }
         transition={{
           opacity: { duration: 0.4, delay: enterDelay },

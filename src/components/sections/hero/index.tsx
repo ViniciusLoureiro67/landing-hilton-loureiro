@@ -54,7 +54,7 @@ export function Hero() {
       <HeroKicker />
       <IgnitionLights />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col px-4 pb-44 pt-32 sm:px-6 sm:pb-48 sm:pt-28 lg:px-8">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col px-4 pb-28 pt-20 sm:px-6 sm:pb-48 sm:pt-28 lg:px-8">
         <HeroMainColumn>
           <NameReveal />
           <HeroTagline />

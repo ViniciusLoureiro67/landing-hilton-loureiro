@@ -15,6 +15,10 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       smoothWheel: true,
       wheelMultiplier: 1,
       touchMultiplier: 1.4,
+      // Intercepta cliques em <a href="#..."> e anima o scroll. Offset
+      // negativo compensa a altura do navbar fixo (h-16 = 64px) pra
+      // o título da seção alvo não ficar escondido atrás dele.
+      anchors: { offset: -64 },
     });
 
     let frame: number;

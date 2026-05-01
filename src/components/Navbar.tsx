@@ -19,11 +19,13 @@ import { Hilton76Logo } from "@/components/Hilton76Logo";
 import { WHATSAPP_HREF } from "@/lib/links";
 import { useCinematicEntrySkip } from "@/lib/use-cinematic-entry";
 
+// Ordem espelha a sequência real da página (page.tsx). Se trocar a
+// ordem das seções na page, ajustar aqui também pra navegação fluir.
 const NAV_LINKS = [
   { href: "#sobre", label: "Sobre" },
   { href: "#temporada", label: "Temporada" },
-  { href: "#galeria", label: "Galeria" },
   { href: "#patrocinio", label: "Para sua marca" },
+  { href: "#galeria", label: "Galeria" },
   { href: "#contato", label: "Contato" },
 ];
 
@@ -139,7 +141,7 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="bg-racing-blue-deep border-white/5 w-[88vw] sm:w-96"
+              className="bg-racing-blue-deep border-white/5 w-[88vw] sm:w-[min(420px,88vw)]"
             >
               <SheetHeader className="border-b border-white/5 pb-4">
                 <SheetTitle className="flex items-center gap-2">

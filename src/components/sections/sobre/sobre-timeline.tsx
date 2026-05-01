@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useReducedMotion } from "@/lib/use-reduced-motion-safe";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * SobreTimeline — palmarés em formato pinned scrollytelling.
@@ -78,6 +78,19 @@ export function SobreTimeline() {
   const reduce = useReducedMotion();
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // < md (768px) → grid de 6 colunas esmaga títulos longos como
+  // "Bicampeão Brasileiro Endurance" em colunas de ~50px no iPhone.
+  // Cai pra mesma lista vertical do reduced-motion. SSR-safe: arranca
+  // como `false`, atualiza no mount.
+  const [isNarrow, setIsNarrow] = useState(false);
+  useEffect(() => {
+    const mql = globalThis.matchMedia("(max-width: 767px)");
+    setIsNarrow(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsNarrow(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start end", "end start"],
@@ -87,8 +100,8 @@ export function SobreTimeline() {
   // o scroll avança no range principal (0.1 → 0.9)
   const lineProgress = useTransform(scrollYProgress, [0.1, 0.9], ["0%", "100%"]);
 
-  // Reduced motion → lista vertical estática
-  if (reduce) {
+  // Reduced motion ou viewport estreito → lista vertical estática
+  if (reduce || isNarrow) {
     return (
       <div className="relative mx-auto max-w-7xl px-4 pb-24 sm:px-6 lg:px-8 lg:pb-32">
         <header className="mb-10">
