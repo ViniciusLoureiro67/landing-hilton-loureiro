@@ -3,13 +3,12 @@ import { ImageResponse } from "next/og";
 /**
  * Favicon dinâmico — gerado em build time via `next/og` (Satori).
  *
- * Design: "76" centralizado em fundo azul-deep, com slash vermelho
- * atravessando o "7" — versão miniatura do wordmark do hero. Sem
- * dependência de font externa (usa system stack pra resolução
- * confiável em 32×32).
+ * Design: "76" centralizado em fundo azul-deep, com "7" em azul-bright
+ * e "6" em vermelho — espelhando o wordmark do navbar (HILTON 76 com
+ * o "76" partido em duas cores). Limpo, sem ornamentos que viram
+ * artefato em 32×32.
  *
- * Cores em sRGB (Satori não suporta `oklch()`), aproximando os
- * tokens de `globals.css`:
+ * Cores em sRGB (Satori não suporta `oklch()`):
  *   - racing-blue-deep   → #101524
  *   - racing-blue-bright → #3D5BF0
  *   - racing-red         → #D63B26
@@ -32,39 +31,16 @@ export default function Icon() {
           alignItems: "center",
           justifyContent: "center",
           background: "#101524",
-          color: "#3D5BF0",
           fontFamily:
             "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
           fontWeight: 900,
-          fontSize: 22,
+          fontSize: 24,
           letterSpacing: -1,
           lineHeight: 1,
-          textTransform: "uppercase",
         }}
       >
-        <span
-          style={{
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          7
-          <span
-            style={{
-              position: "absolute",
-              left: "42%",
-              top: 1,
-              bottom: 1,
-              width: 3,
-              background: "#D63B26",
-              transform: "rotate(18deg)",
-              transformOrigin: "center",
-              borderRadius: 1,
-            }}
-          />
-        </span>
-        <span style={{ color: "#D63B26", display: "flex" }}>6</span>
+        <span style={{ display: "flex", color: "#3D5BF0" }}>7</span>
+        <span style={{ display: "flex", color: "#D63B26" }}>6</span>
       </div>
     ),
     { ...size }
