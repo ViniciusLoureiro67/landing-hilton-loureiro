@@ -49,23 +49,23 @@ const PALMARES: TimelineItem[] = [
   },
   {
     year: "2022",
-    title: "Vice-campeão Paraibano",
-    detail: "Volta consistente ao alto rendimento.",
+    title: "Primeiro pódio nacional",
+    detail: "Estreia entre os melhores do país.",
   },
   {
     year: "2023",
-    title: "Vice-campeão Brasileiro",
-    detail: "Primeiro pódio nacional na 600cc.",
+    title: "Vice-campeão Brasileiro 400cc",
+    detail: "Consolidação na categoria nacional.",
   },
   {
     year: "2024",
-    title: "Campeão Brasileiro Endurance + 3º na 600cc Master",
-    detail: "Entra no quadro nacional dos protagonistas.",
+    title: "Campeão Brasileiro Endurance 600cc",
+    detail: "Também 3º na 600cc Master.",
   },
   {
     year: "2025",
     title: "Bicampeão Brasileiro Endurance",
-    detail: "Confirmação. Defende o título em 2026.",
+    detail: "Confirmação no topo da categoria.",
     current: true,
   },
 ];
