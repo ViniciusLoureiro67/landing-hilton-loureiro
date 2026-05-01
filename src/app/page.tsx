@@ -2,6 +2,7 @@ import { Hero } from "@/components/sections/hero";
 import { Sobre } from "@/components/sections/sobre";
 import { Temporada } from "@/components/sections/temporada";
 import { Patrocinio } from "@/components/sections/patrocinio";
+import { Galeria } from "@/components/sections/galeria";
 import { SectionDivider } from "@/components/motion/section-divider";
 
 export default function Home() {
@@ -33,10 +34,13 @@ export default function Home() {
       <Patrocinio />
 
       {/* Conexão Patrocínio → Galeria */}
-      <SectionDivider variant="ticker" label="Galeria" />
+      <SectionDivider
+        variant="slash"
+        numerator={["05", "06"]}
+        label="Galeria"
+      />
 
-      {/* Sprint 5+ section anchors */}
-      <section id="galeria" className="min-h-[40vh]" />
+      <Galeria />
     </>
   );
 }
