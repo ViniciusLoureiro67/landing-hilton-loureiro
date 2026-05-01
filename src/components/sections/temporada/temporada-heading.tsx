@@ -81,9 +81,9 @@ export function TemporadaHeading() {
         className="mt-6 max-w-2xl font-sans text-base leading-relaxed text-racing-white/75 sm:text-lg"
       >
         Oito etapas no Campeonato Brasileiro de Motovelocidade.
-        De Interlagos a Cuiabá, a estreia de Hilton Loureiro na categoria
-        máxima do motociclismo nacional, com homologação CBM e FIM Latin
-        América.
+        De Interlagos a Cuiabá, a participação de Hilton Loureiro no maior
+        campeonato de motovelocidade da América Latina, homologado pela
+        CBM e FIM Latin America.
       </motion.p>
     </motion.div>
   );
