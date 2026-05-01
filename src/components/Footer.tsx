@@ -100,7 +100,10 @@ export function Footer() {
           <span className="text-center">
             Feito por Vinicius Soares Loureiro ·{" "}
             <a
-              href="tel:+5582993060696"
+              href="https://wa.me/5582993060696?text=Ol%C3%A1%20Vinicius%2C%20vim%20pelo%20site%20que%20voc%C3%AA%20fez%20pro%20Hilton%2076%20e%20gostaria%20de%20conversar."
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Falar com Vinicius Loureiro no WhatsApp — abre em nova aba"
               className="transition-colors hover:text-racing-blue-bright"
             >
               (82) 99306-0696
