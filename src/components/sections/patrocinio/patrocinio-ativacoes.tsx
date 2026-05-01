@@ -44,8 +44,14 @@ export function PatrocinioAtivacoes() {
   return (
     <div className="space-y-12 lg:space-y-16">
       {/* Header — em mobile esconde "07 ativações" do lado direito pra
-          não apertar a linha decorativa contra o kicker */}
-      <div ref={headerRef} className="flex items-baseline gap-3 sm:gap-4">
+          não apertar a linha decorativa contra o kicker. Indentação
+          `lg:pl-16 xl:pl-20` casa com o `sectionRef` abaixo: o rail
+          vertical absoluto ocupa esse gutter à esquerda no lg+, então
+          o kicker precisa começar depois pra não ser atropelado. */}
+      <div
+        ref={headerRef}
+        className="flex items-baseline gap-3 sm:gap-4 lg:pl-16 xl:pl-20"
+      >
         <motion.span
           initial={{ opacity: 0, x: -20 }}
           animate={headerInView ? { opacity: 1, x: 0 } : undefined}
