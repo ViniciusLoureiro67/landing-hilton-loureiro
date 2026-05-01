@@ -96,6 +96,20 @@ export function Footer() {
       <div className="relative border-t border-white/5">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs text-racing-mute sm:flex-row sm:px-6 lg:px-8">
           <span>© {new Date().getFullYear()} Hilton Loureiro · Todos os direitos reservados.</span>
+
+          <span className="text-center">
+            Feito por Vinicius Soares Loureiro ·{" "}
+            <a
+              href="https://wa.me/5582993060696?text=Ol%C3%A1%20Vinicius%2C%20vim%20pelo%20site%20que%20voc%C3%AA%20fez%20pro%20Hilton%2076%20e%20gostaria%20de%20conversar."
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Falar com Vinicius Loureiro no WhatsApp — abre em nova aba"
+              className="transition-colors hover:text-racing-blue-bright"
+            >
+              (82) 99306-0696
+            </a>
+          </span>
+
           <span className="font-mono uppercase tracking-widest">#76 · pt-BR</span>
         </div>
       </div>
