@@ -142,7 +142,7 @@ function SponsorCard({
   return (
     <motion.li
       variants={reduce ? undefined : cardVariants}
-      className="group relative isolate flex aspect-[5/3] items-center justify-center overflow-hidden rounded-sm border border-racing-white/10 bg-racing-blue-deep/40 transition-[border-color,background-color] duration-500 hover:border-racing-red/60 hover:bg-racing-blue-deep/60 sm:aspect-[16/9]"
+      className="group relative isolate flex aspect-[5/3] items-center justify-center overflow-hidden rounded-sm border border-racing-white/10 bg-racing-blue-deep/40 transition-[border-color,background-color] duration-500 hover:border-racing-red/60 hover:bg-racing-blue-deep/60 focus-within:border-racing-red/60 sm:aspect-[16/9]"
     >
       <span
         aria-hidden
@@ -174,7 +174,15 @@ function SponsorCard({
         <SponsorLogo sponsor={sponsor} />
       </motion.div>
 
-      <span className="sr-only">{sponsor.name}</span>
+      <a
+        href={sponsor.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`${sponsor.name} — abrir Instagram em nova aba`}
+        className="absolute inset-0 z-20 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-racing-red focus-visible:ring-offset-2 focus-visible:ring-offset-racing-blue-deep"
+      >
+        <span className="sr-only">{sponsor.name}</span>
+      </a>
     </motion.li>
   );
 }

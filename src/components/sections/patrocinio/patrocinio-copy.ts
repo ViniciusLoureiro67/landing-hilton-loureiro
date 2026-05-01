@@ -30,6 +30,7 @@ export const PATROCINIO_COPY = {
     {
       name: "Garagem 57",
       logoSrc: "/sponsors/garagem-57.svg",
+      href: "https://www.instagram.com/garagem57mcz/",
       // Wordmark sem bandeira: viewBox cropado 1740×220, aspect ~7.9
       aspect: 1740 / 220,
       widthPct: 90,
@@ -37,6 +38,7 @@ export const PATROCINIO_COPY = {
     {
       name: "Formafit",
       logoSrc: "/sponsors/formafit-clean.png",
+      href: "https://www.instagram.com/formafitmaceio/",
       // Portrait — limite de altura é o constraint (não largura)
       aspect: 495 / 616,
       widthPct: 50,
@@ -44,6 +46,7 @@ export const PATROCINIO_COPY = {
     {
       name: "AC Vitha Clinic",
       logoSrc: "/sponsors/vitha-clinic.svg",
+      href: "https://www.instagram.com/draanaclaudialoureiro/",
       aspect: 740 / 502,
       // Letras "thin" elegantes — pode ser maior pra ter presença
       widthPct: 80,
@@ -51,6 +54,7 @@ export const PATROCINIO_COPY = {
     {
       name: "Brasil da Sorte",
       logoSrc: "/sponsors/brasil-da-sorte.svg",
+      href: "https://www.instagram.com/brasildasortebet/",
       aspect: 481.89 / 226.772,
       // Letras "thick" e "B" denso — não precisa ser tão grande
       widthPct: 78,
