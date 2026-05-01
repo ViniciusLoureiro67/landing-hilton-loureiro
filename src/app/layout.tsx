@@ -4,6 +4,7 @@ import "./globals.css";
 import { SmoothScrollProvider } from "@/components/SmoothScrollProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -91,6 +92,7 @@ export default function RootLayout({
           <main className="flex flex-col flex-1">{children}</main>
           <Footer />
         </SmoothScrollProvider>
+        <Analytics />
       </body>
     </html>
   );
