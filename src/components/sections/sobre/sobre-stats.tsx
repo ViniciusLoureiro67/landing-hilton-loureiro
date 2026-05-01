@@ -27,21 +27,20 @@ type StatItem = {
 };
 
 const STATS: StatItem[] = [
-  { index: "01", value: 49, label: "Anos", ariaLabel: "49 anos de idade" },
   {
-    index: "02",
+    index: "01",
     value: 13,
     label: "Temporadas",
     ariaLabel: "13 temporadas consecutivas",
   },
   {
-    index: "03",
+    index: "02",
     value: 6,
     label: "Títulos",
     ariaLabel: "6 títulos conquistados",
   },
   {
-    index: "04",
+    index: "03",
     value: 76,
     label: "Número",
     ariaLabel: "Número 76 de corrida",
@@ -85,7 +84,7 @@ export function SobreStats() {
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
       variants={reduce ? undefined : containerVariants}
-      className="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-4 sm:gap-x-8"
+      className="grid grid-cols-3 gap-x-3 gap-y-12 sm:gap-x-8"
     >
       {STATS.map((stat) => (
         <motion.div

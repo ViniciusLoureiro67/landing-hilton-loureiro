@@ -26,9 +26,8 @@ const PARAGRAPHS = [
     text: (
       <>
         Compete no motociclismo brasileiro desde{" "}
-        <strong className="font-medium text-racing-white">2013</strong>. Aos{" "}
-        <strong className="font-medium text-racing-white">49 anos</strong>,
-        acumula seis títulos regionais e nacionais, incluindo o{" "}
+        <strong className="font-medium text-racing-white">2013</strong>. Acumula
+        seis títulos regionais e nacionais, incluindo o{" "}
         <strong className="text-racing-white">
           bicampeonato do Brasileiro Endurance 600cc
         </strong>{" "}
