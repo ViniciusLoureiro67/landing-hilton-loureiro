@@ -139,7 +139,7 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="bg-racing-blue-deep border-white/5 w-[88vw] sm:w-96"
+              className="bg-racing-blue-deep border-white/5 w-[88vw] sm:w-[min(420px,88vw)]"
             >
               <SheetHeader className="border-b border-white/5 pb-4">
                 <SheetTitle className="flex items-center gap-2">

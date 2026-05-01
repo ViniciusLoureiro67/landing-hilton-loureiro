@@ -44,8 +44,9 @@ function WhatsAppCta() {
       onBlur={() => setHovering(false)}
       whileTap={reduceMotion ? undefined : { scale: 0.97 }}
       className={cn(
-        // alvo touch ≥48px (>=44 mínimo)
-        "group relative inline-flex h-12 min-w-[15rem] items-center justify-center gap-2.5 overflow-hidden rounded-lg px-6",
+        // alvo touch ≥48px (>=44 mínimo). min-w só em sm+ pra não estourar
+        // largura útil em iPhone SE (375px - 32px padding = 343px).
+        "group relative inline-flex h-12 w-full items-center justify-center gap-2.5 overflow-hidden rounded-lg px-6 sm:w-auto sm:min-w-[15rem]",
         "bg-racing-red text-racing-white",
         "font-heading text-sm font-bold uppercase tracking-[0.22em]",
         "transition-colors duration-300",
