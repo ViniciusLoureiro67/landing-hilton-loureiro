@@ -41,4 +41,17 @@ export const WHATSAPP_PATROCINIO_HREF = buildWhatsappHref(
 );
 
 export const INSTAGRAM_HREF = "https://www.instagram.com/hilton_loureiro76/";
-export const EMAIL_HREF = "mailto:hiltonloureiro@hotmail.com";
+export const EMAIL_ADDRESS = "hiltonloureiro@hotmail.com";
+export const EMAIL_HREF = `mailto:${EMAIL_ADDRESS}`;
+
+/** Press kit oficial — PDF com mídia em alta resolução pra imprensa. */
+export const PRESS_KIT_HREF = "/press/hilton76-press-kit.pdf";
+
+/**
+ * Constrói uma URL `wa.me` com mensagem custom — usado pelo form da seção
+ * Contato pra abrir o WhatsApp pré-preenchido com os dados que o
+ * usuário digitou. Sem backend: o usuário revisa no WhatsApp e envia.
+ */
+export function buildWhatsappFormHref(message: string) {
+  return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
+}

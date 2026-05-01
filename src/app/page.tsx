@@ -3,6 +3,7 @@ import { Sobre } from "@/components/sections/sobre";
 import { Temporada } from "@/components/sections/temporada";
 import { Patrocinio } from "@/components/sections/patrocinio";
 import { Galeria } from "@/components/sections/galeria";
+import { Contato } from "@/components/sections/contato";
 import { SectionDivider } from "@/components/motion/section-divider";
 
 export default function Home() {
@@ -41,6 +42,15 @@ export default function Home() {
       />
 
       <Galeria />
+
+      {/* Conexão Galeria → Contato */}
+      <SectionDivider
+        variant="slash"
+        numerator={["06", "07"]}
+        label="Contato"
+      />
+
+      <Contato />
     </>
   );
 }
