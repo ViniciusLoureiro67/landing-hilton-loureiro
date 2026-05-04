@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Anton, Saira_Condensed } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import { SmoothScrollProvider } from "@/components/SmoothScrollProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -91,6 +92,7 @@ export default function RootLayout({
           <main className="flex flex-col flex-1">{children}</main>
           <Footer />
         </SmoothScrollProvider>
+        <Analytics />
       </body>
     </html>
   );
