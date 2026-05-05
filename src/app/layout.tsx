@@ -73,7 +73,40 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
+  alternates: {
+    canonical: siteUrl,
+  },
+};
+
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Hilton Loureiro",
+  alternateName: "Hilton 76",
+  url: siteUrl,
+  image: `${siteUrl}/opengraph-image`,
+  jobTitle: "Piloto profissional de motovelocidade",
+  nationality: "BR",
+  description:
+    "Bicampeão Brasileiro Endurance 600cc, na categoria 600cc Master pela equipe NRT.",
+  award: [
+    "Bicampeão Brasileiro Endurance 600cc",
+    "Categoria 600cc Master — Campeonato Brasileiro de Motovelocidade",
+  ],
+  affiliation: [
+    { "@type": "SportsTeam", name: "NRT" },
+    { "@type": "Organization", name: "Garagem 57" },
+  ],
+  knowsAbout: ["Motovelocidade", "Endurance 600cc", "Kawasaki ZX6R"],
+  sameAs: ["https://www.instagram.com/hilton_loureiro76/"],
 };
 
 export default function RootLayout({
@@ -87,6 +120,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${anton.variable} ${sairaCondensed.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-racing-blue-bright selection:text-racing-white">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
         <SmoothScrollProvider>
           <Navbar />
           <main className="flex flex-col flex-1">{children}</main>
